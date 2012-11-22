@@ -1,0 +1,167 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.dao.imp;
+
+import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
+
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Usuarios;
+import mx.gob.tabasco.saf.siafe.presupuesto.constantes.Constantes;
+import mx.gob.tabasco.saf.siafe.presupuesto.dao.IUsuarioDAO;
+import mx.gob.tabasco.saf.siafe.presupuesto.utilerias.FechaUtils;
+
+import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.DataAccessUtils;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+@Repository
+public class UsuarioDAO extends BaseHibernateDAO<Usuarios> implements
+		IUsuarioDAO {
+
+	final static Long FECHA_ACTUAL;
+	
+
+	static {
+		FECHA_ACTUAL = FechaUtils.convertDatetoLong(new Date());
+	}
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
+	@SuppressWarnings({ "unchecked", "deprecation", "null" })
+	public List<Usuarios> listUsuariosByEmpleadoAndUsuario(List<Long> ids,boolean admin,String empleado,String usuario,Long cveEmpleado){
+		DetachedCriteria criteria = DetachedCriteria.forClass(Usuarios.class)
+			.setFetchMode("empleados", FetchMode.LAZY)
+			.setFetchMode("empleados.unidades", FetchMode.LAZY);
+		if(cveEmpleado!=null)
+			criteria.add(Restrictions.eq("empleados.cve", cveEmpleado));
+		
+		if(usuario!=null)
+			if(!usuario.equalsIgnoreCase(""))
+				criteria.add(Restrictions.like("nombreUsuario", usuario.trim().toLowerCase()+"%").ignoreCase());
+		if(empleado!=null)
+			if(!empleado.equalsIgnoreCase(""))
+				criteria.createAlias("empleados", "e").add(Restrictions.like("e.nombreCompleto", empleado.toLowerCase().trim()+"%").ignoreCase());				
+		
+		if(!admin){
+			if(ids ==null){
+				if(ids.size()>0){
+					//criteria.createCriteria("empleados")
+//					.createCriteria("unidades").add(Restrictions.isNull("id"));
+					criteria.createAlias("empleados", "em");
+					criteria.createAlias("em.unidades", "u");
+					criteria.add(Restrictions.in("u.id", ids));
+				}
+//				else{
+//					criteria.createCriteria("empleados") //.unidades").add(Restrictions.isNull("id"));
+//					.createCriteria("unidades").add(Restrictions.isNotNull("id"));
+//				}
+			}
+		}
+		return this.getHibernateTemplate().findByCriteria(criteria);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Transactional
+	@Override
+	public Usuarios getUsuarioByCredentials(String username, String password) {
+		try {
+			DetachedCriteria criteria = DetachedCriteria
+					.forClass(Usuarios.class).add(
+							Restrictions.eq("nombreUsuario", username));
+			String fecha = null;
+			Usuarios user = DataAccessUtils.uniqueResult(this
+					.getHibernateTemplate().findByCriteria(criteria));
+			
+			if (user.getActivo() == 1) {
+				if (user.getFechaInicioVigencia() > FECHA_ACTUAL) {					try {
+						fecha = FechaUtils
+								.formatDate(FechaUtils.convertLongToDate(user
+										.getFechaInicioVigencia()), "dd/MM/yyyy");
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+					throw new AuthenticationCredentialsNotFoundException(
+							"La cuenta se activa el día " + fecha);
+				} else if (user.getFechaVencimientoVigencia() < FECHA_ACTUAL) {
+					throw new AuthenticationCredentialsNotFoundException(
+							"Sus credenciales han expirado");
+				}else if (passwordEncoder.isPasswordValid(user.getContrasenia(),
+						password, Constantes.SALT)) {
+					return user;
+				}else{
+					throw new UsernameNotFoundException("Usuario / Contraseña no válidos");
+				}
+			}else{
+				throw new BadCredentialsException("Usuario deshabilitado");
+			}
+		} catch (NullPointerException e) {
+			log.error("Error Login ", e);
+			throw new UsernameNotFoundException("Usuario / Contraseña no válidos");
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Transactional
+	@Override
+	public Usuarios getUserByName(String username) {
+		try {
+			DetachedCriteria criteria = DetachedCriteria
+					.forClass(Usuarios.class).add(
+							Restrictions.eq("nombreUsuario", username).ignoreCase());
+			Usuarios user = DataAccessUtils.uniqueResult(this
+					.getHibernateTemplate().findByCriteria(criteria));
+			return user;
+		} catch (Exception e) {
+			log.error("Error Login ", e);
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Transactional(readOnly = true)
+	public List<Usuarios> listByIdUnidadesPermitidas(List<Long> idUnidades,boolean admin){
+		try {
+			DetachedCriteria criteria = DetachedCriteria.forClass(Usuarios.class);
+			if(!admin){
+				if(idUnidades !=null){
+					if(idUnidades.size()>0){
+						criteria.createCriteria("empleados").createCriteria("unidades").add(Restrictions.in("id", idUnidades));
+					}else{
+						criteria.createCriteria("empleados").createCriteria("unidades").add(Restrictions.isNull("cve"));
+					}
+				}
+			}
+			return this.getHibernateTemplate().findByCriteria(criteria);
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			log.error("Error listByIdUnidadesPermitidas ", e);
+			return null;
+		} catch (HibernateException e) {
+			// TODO Auto-generated catch block
+			log.error("Error listByIdUnidadesPermitidas ", e);
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Usuarios> findByNombreUsuario(String nombreUsuario)
+			throws DataAccessException {
+		DetachedCriteria criteria = DetachedCriteria.forClass(Usuarios.class)
+				.add(Restrictions.ilike("nombreUsuario", nombreUsuario + "%"));
+		
+		return this.getHibernateTemplate().findByCriteria(criteria);
+	}
+
+
+}

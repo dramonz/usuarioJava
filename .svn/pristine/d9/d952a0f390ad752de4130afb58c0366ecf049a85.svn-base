@@ -1,0 +1,56 @@
+@CHARSET "UTF-8";
+
+.module-title {
+	height: 50px;
+	border: 2px solid #ff7519;
+	width: 95%;
+	margin: 20px auto 0;
+	border-radius: 10px;
+	position: relative;
+	min-width: 800px
+}
+
+.module-title h1 {
+	color: #4c4c4c;
+	font-size: 26px;
+	font-family: 'Myriad Pro';
+	line-height: 40px;
+	margin-left: 70px
+}
+
+.module-title .title-icon {
+	width: 52px;
+	height: 47px;
+	background: url('../images/module-title-icon.png') no-repeat;
+	position: absolute;
+	left: 10px;
+	top: -10px
+}
+
+#antecedentes, #clasificaciones, #demandas, #dependencias, #ejecuciones, #finalidades,
+#fuentes,#funciones,#participaciones,#prioridades,#procedencias,#programas,#sectores,
+#subfunciones,#subprogrmas,#subsecotres,#unidades,#unidadesmedida {
+	width: 95%;
+	margin: 20px auto
+}
+
+#form-agregar-empleado, #form-agregar-rol, #form-agregar-usuario  {
+	width: 50%;
+	margin: 20px auto
+}
+
+#form-cedula-basica {
+	width: 95%;
+	margin: 25px auto 20px;
+	min-width: 800px
+}
+
+.module-widget {
+	width: 90%;
+	margin: 20px auto;
+}
+
+.required {
+	color: #C33;
+	font-weight: bold
+}

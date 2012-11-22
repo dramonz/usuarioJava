@@ -1,0 +1,17 @@
+/**
+ * @author José Luis Landero
+ */
+Ext.ClassManager.create('PR.store.PermisosRolTree', {
+	extend: 'Ext.data.TreeStore',
+	
+	root: {
+		expanded: true,
+		children: []
+	},
+	
+	proxy: {
+		type: 'ajax',
+		url: Namespace.namespace + 'roles/obtener-permisos-rol',
+		reader: 'json'
+	}
+});

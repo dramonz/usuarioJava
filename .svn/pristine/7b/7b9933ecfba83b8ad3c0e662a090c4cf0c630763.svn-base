@@ -1,0 +1,122 @@
+/**
+ * 
+ */
+Ext.ClassManager.create('PR.view.usuario.AgregarEmpleado', {
+	extend: 'Ext.form.Panel',
+	alias: 'widget.agregarempleadoform',
+	id: 'agregarempleado',
+	url: 'agregarempleado',
+	width: '100%',
+	defaults: {
+		anchor: '95%',
+		labelPad: 20,
+		labelAlign: 'right',
+		padding: '10 0 5 0',
+		labelWidth: 125
+	},
+	
+	initComponent: function() {
+		this.items = [{
+			xtype: 'textfield',
+			id: 'nombre-empleado',
+			fieldLabel: 'Nombre<span class="required">*</span>',
+			maxLength:50,
+			allowBlank: false,
+			name: 'nombre'
+		},{		
+			xtype: 'textfield',
+			id: 'editar-nombre-empleado',
+			fieldLabel: 'Nombre<span class="required">*</span>',
+			maxLength:50,
+			allowBlank: false,
+			hidden:true,
+			disabled:true,
+			name: 'nombreEditar'
+		
+		}, {
+			xtype: 'textfield',
+			id: 'apellidos-empleado',
+			fieldLabel: 'Apellidos<span class="required">*</span>',
+			maxLength:35,
+			allowBlank: false,
+			name: 'apellidos'
+		}, {
+			xtype: 'combobox',
+			id: 'area-empleado',
+			fieldLabel: 'Área<span class="required">*</span>',
+			name: 'area',
+			queryMode: 'local',
+			displayField: 'nombreArea',
+			valueField: 'cve',
+			forceSelection:true,
+			allowBlank: false,	
+			store: 'Area'
+		}, {
+			xtype: 'combobox',
+			id: 'puesto-empleado',
+			fieldLabel: 'Puesto<span class="required">*</span>',
+			name: 'puesto',
+			queryMode: 'local',
+			displayField: 'nombrePuesto',
+			valueField: 'cve',
+			forceSelection:true,
+			allowBlank: false,	
+			store: 'Puesto'
+		}, {
+			xtype: 'textfield',
+			id: 'email-empleado',
+			fieldLabel: 'Correo Electrónico',
+			maxLength:200,
+			vtype:'email',
+			name: 'email'
+		}, {
+			xtype: 'combobox',
+			id: 'unidad-empleado',
+			fieldLabel: 'Unidad<span class="required">*</span>',
+			name: 'unidad',
+			queryMode: 'local',
+			displayField: 'nombre',
+			valueField: 'id',
+			forceSelection:true,
+			allowBlank: false,	
+			store: 'UnidadesComboUsuarios'
+		},{
+			xtype: 'combobox',
+			id: 'jefe-empleado',
+			fieldLabel: 'Jefe de Empleado',
+			name: 'jefe',
+			queryMode: 'local',
+			displayField: 'nombre',
+			valueField: 'cve',
+			allowBlank: true,
+			forceSelection: false,
+			 loadingText: 'Buscando...',
+			 typeAhead :true,
+			 emptyText :'Introduzca las primeras cinco letras del nombre',
+			 hideTrigger :true,
+			 enableKeyEvents:true,
+			store: 'jefeEmpleados'
+		},{
+			xtype: 'fieldcontainer',
+			fieldLabel: 'Activo',
+			items: [{
+				xtype: 'checkboxfield',
+				inputValue: '1',
+				name: 'activo',
+				id: 'activoEmpleado'
+			}]
+		}];
+		this.dockedItems=[{
+			xtype: 'toolbar',
+			cls:'grid-toolbar',
+			dock: 'bottom',
+			items: ['->', {
+				text: 'Agregar Empleado',
+				id:'idAgregarEmpleado',
+				formBind: true
+			}]
+		}];
+		
+		this.callParent(arguments);
+	}
+});

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:b="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:sec="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
+            http://www.springframework.org/schema/security 
+            http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+          
+	<global-method-security pre-post-annotations="enabled">
+    </global-method-security>
+	
+		<!-- ****************Spring Security Filter Chain****************** -->
+	
+	<b:bean id="springSecurityFilterChain" class="org.springframework.security.web.FilterChainProxy">
+		<sec:filter-chain-map path-type="ant">
+		<sec:filter-chain filters="none" pattern="/login/**"/> 
+		<sec:filter-chain filters="none" pattern="/extjs/**"/>
+		<sec:filter-chain filters="none" pattern="/resources/**"/>
+		<sec:filter-chain filters="none" pattern="/images/**"/>
+		<sec:filter-chain filters="none" pattern="/ext/**"/>
+		<sec:filter-chain filters="none" pattern="/app/**"/> 
+			<sec:filter-chain pattern="/**"
+				filters="securityContextFilter,
+			logoutFilter,
+			concurrencyFilter,
+			sessionManagementFilter,
+			authenticationProcessingFilter,
+			exceptionTranslationFilter,
+			filterSecurityInterceptor" />			
+		</sec:filter-chain-map>
+	</b:bean>
+
+	<!-- **********Context Filter************* -->
+
+	 <b:bean id="securityContextFilter" class="org.springframework.security.web.context.SecurityContextPersistenceFilter" >
+    	<b:property name="securityContextRepository" ref="securityContextRepository" />
+	</b:bean>
+	
+	<b:bean id="securityContextRepository"
+        class="org.springframework.security.web.context.HttpSessionSecurityContextRepository" /> 
+
+	<!-- <b:bean id="httpSessionContextFilter" 
+	class="org.springframework.security.web.context.HttpSessionContextIntegrationFilter"/>  -->
+
+	<!-- **************Logout Filter**************** -->
+	
+	<b:bean id="logoutFilter"
+		class="org.springframework.security.web.authentication.logout.LogoutFilter">
+		<b:constructor-arg value="${logout.address}" />
+		<b:constructor-arg>
+			<b:list>
+				<b:ref bean="myLogoutHandler"/>
+				 <b:bean
+					class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler" />
+			</b:list>
+		</b:constructor-arg>
+	</b:bean>
+	
+	<b:bean id="myLogoutHandler" 
+		class="mx.gob.tabasco.saf.siafe.presupuesto.controladores.SessionListenerControlador"/>
+	
+	<!-- ******************Concurrency Filter**************** -->
+	<b:bean id="concurrencyFilter"
+      class="org.springframework.security.web.session.ConcurrentSessionFilter">
+    	<b:property name="sessionRegistry" ref="sessionRegistry" />
+   		<b:property name="expiredUrl" value="${logout.address}" />
+  	</b:bean>  	
+  	
+  	
+	<!-- ******************Session Management Filter******************** -->
+	
+	<b:bean id="sessionManagementFilter"
+    	class="org.springframework.security.web.session.SessionManagementFilter">
+    	<b:constructor-arg ref="securityContextRepository" />
+    	<b:property name="sessionAuthenticationStrategy" ref="sas"/>
+  	</b:bean>
+	
+	<!-- ***********Authentication Processing Filter************* -->
+
+	<b:bean id="authenticationProcessingFilter"
+		class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">		
+		<b:property name="sessionAuthenticationStrategy" ref="sas"/> 
+		<b:property name="authenticationManager" ref="authenticationManager" />		
+		<b:property name="authenticationSuccessHandler" ref="authenticationSuccessHandler" /> 
+		<b:property name="authenticationFailureHandler" ref="failureHandler"/>		   
+	</b:bean>
+	
+	<b:bean id="sas"
+      class="org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy"/>
+	
+	<!-- <b:bean id="sas"
+      class="org.springframework.security.web.authentication.session.ConcurrentSessionControlStrategy">
+    	<b:constructor-arg name="sessionRegistry" ref="sessionRegistry" />
+    	<b:property name="maximumSessions" value="1" />
+    	<b:property name="exceptionIfMaximumExceeded" value="true"/>
+  	</b:bean> -->
+  	
+  	<b:bean id="sessionRegistry" 
+  		class="org.springframework.security.core.session.SessionRegistryImpl" />
+  	
+	<sec:authentication-manager alias="authenticationManager">
+		<authentication-provider ref="authenticationProvider">
+			<password-encoder ref="passwordEncoder" />
+		</authentication-provider>
+	</sec:authentication-manager>
+
+	<b:bean id="authenticationProvider" 
+		class="mx.gob.tabasco.saf.siafe.presupuesto.servicios.usuarios.CustomAuthenticationProvider">
+	</b:bean>
+		
+	<b:bean id="passwordEncoder"
+		class="org.springframework.security.authentication.encoding.Md5PasswordEncoder" />
+
+	<b:bean id="authenticationSuccessHandler"
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler">
+		<b:property name="defaultTargetUrl" value="/"/>
+	</b:bean>	
+	
+	<b:bean id="failureHandler"
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+		<b:property name="defaultFailureUrl" value="/login?error=true"></b:property>
+	</b:bean>
+	
+
+	<!-- *********************Exception Translator Filter*************** -->
+
+	<b:bean id="exceptionTranslationFilter" class="org.springframework.security.web.access.ExceptionTranslationFilter">
+		<b:property name="authenticationEntryPoint" ref="authenticationEntryPoint"/>
+		<b:property name="accessDeniedHandler" ref="accessDeniedHandler" />
+	</b:bean> 
+
+	<b:bean id="authenticationEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint" >
+		<b:property name="loginFormUrl" value="/login/" />
+	</b:bean>
+
+	<b:bean id="accessDeniedHandler"
+		class="org.springframework.security.web.access.AccessDeniedHandlerImpl">
+		<b:property name="errorPage" value="/error/error401" />
+	</b:bean>
+
+
+	<!-- ***********************Filter Security Interceptor********************* -->
+
+	<b:bean id="filterSecurityInterceptor"
+		class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+		<b:property name="authenticationManager" ref="authenticationManager" />
+		<b:property name="accessDecisionManager" ref="accessDecisionManager" />
+		 <b:property name="securityMetadataSource" ref="mySecureResourceFilter"/> 
+	</b:bean>
+
+	<b:bean id="accessDecisionManager"
+		class="org.springframework.security.access.vote.AffirmativeBased">
+		<b:property name="decisionVoters">
+			<b:list>
+				<b:bean class="org.springframework.security.access.vote.RoleVoter" />
+				<b:bean
+					class="org.springframework.security.access.vote.AuthenticatedVoter" />
+			</b:list>
+		</b:property>
+	</b:bean>
+
+	  <b:bean id="mySecureResourceFilter"
+		class="mx.gob.tabasco.saf.siafe.presupuesto.servicios.CustomSecureResourceFilter">
+	</b:bean>  
+
+</b:beans>

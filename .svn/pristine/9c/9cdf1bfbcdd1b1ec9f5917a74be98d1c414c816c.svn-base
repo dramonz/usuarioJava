@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+	<persistence-unit name="Usuarios">
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.DependenciaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProgramaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.BeneficiarioDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.UnidadDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.FuncionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.SubfuncionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.SectorDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.SubsectorDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.SubprogramaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.LocalidadDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.MunicipioDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.FuenteDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProcedenciaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.AntecedenteDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.PrioridadDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.DemandaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.LineaAccionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ParticipacionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.PledDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.UnidadMedidaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProyectoDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProyectoCalificadorDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ClasificacionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.EjecucionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.FinalidadDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.CogPartidaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.DireccionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.EstadoDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.SubtipoFuenteDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.TipoDependenciaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.TipoFuenteDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProyectoCuentaDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProyectoOficioDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.ProyectoProgramacionDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.TipoBeneficiarioDB</class>
+		<class>mx.gob.tabasco.saf.arco.comun.db.entidades.TipoProyectoDB</class>
+	</persistence-unit>
+</persistence>

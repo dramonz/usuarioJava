@@ -1,0 +1,250 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.servicios;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.CustomUserDetails;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Modulos;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Roles;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.RolesModulos;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.RolesModulosId;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Usuarios;
+import mx.gob.tabasco.saf.siafe.presupuesto.constantes.Constantes;
+import mx.gob.tabasco.saf.siafe.presupuesto.controladores.F2B.RolF2B;
+import mx.gob.tabasco.saf.siafe.presupuesto.dao.IRolDAO;
+import mx.gob.tabasco.saf.siafe.presupuesto.dao.IRolModuloDAO;
+
+import org.apache.log4j.Logger;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class RolServicio implements IBaseService<Roles, Long> {
+
+	protected final Logger log = Logger.getLogger(this.getClass());
+
+	@Resource
+	private IRolModuloDAO rolModuloDao;
+	
+	@Resource
+	private IRolDAO dao;
+	
+	@Resource
+	private RolModuloServicio rolModuloServicio;
+
+	/**
+	 * 
+	 * @param nombreRol
+	 * @return
+	 */
+	@Transactional(readOnly = true)
+	public List<RolF2B> findByNombreRol(String nombreRol) {
+		List<Roles> roles = this.dao.findByNombreRol(nombreRol);
+		List<RolF2B> rolesF2B = new ArrayList<RolF2B>();
+		for (Roles rol : roles) {
+			RolF2B rolF2B = new RolF2B();
+			rolF2B.setRol(rol.getRol());
+			rolesF2B.add(rolF2B);
+		}
+		
+		return rolesF2B;
+	}
+	
+	@Override
+	public Roles getActiveById(Class<Roles> entity, Long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void delete(Roles entity) {
+		this.dao.delete(entity);
+
+	}
+
+	@Override
+	public void deleteHistorico(Roles entity) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public List<Roles> listAll(Class<Roles> entity) {
+		return this.dao.listAll(entity);
+	}
+
+	public List<Roles> findAll(Class<Roles> entity) {
+		log.info("Getting Rol..."+entity);
+		List <Roles> rolesList = new ArrayList<Roles>();
+		CustomUserDetails user = (CustomUserDetails) SecurityContextHolder
+				.getContext().getAuthentication();
+		Usuarios usuario = (Usuarios) user.getDetails();
+		for (Roles roles : usuario.getRoles()) {
+			if(roles.getRol().equals(Constantes.ROLE_ADMIN)){
+				rolesList = this.dao.findAll(entity);
+				break;
+			}else{
+				rolesList.add(roles);
+			}
+		}
+		
+		return rolesList;
+	}
+
+	@Override
+	public List<Roles> listAll(Class<Roles> entity, Long id) {
+		return this.dao.listAll(entity, id);
+	}
+
+	@Override
+	public List<Roles> listByPage(Class<Roles> entity, int from, int limit) {
+		return this.dao.listByPage(entity, from, limit);
+	}
+
+	@Override
+	public Roles getByCve(Class<Roles> entity, Long cve) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	/**
+	 * getByRol
+	 * @param rol
+	 * @return Roles
+	 */
+	public Roles getByRol(String rol) {
+		return this.dao.getByRol(rol);
+	}
+	
+	@Override
+	public void insert(Roles entity) {
+		this.dao.insert(entity);
+	}
+
+	@Override
+	public void insertHistorico(Roles entity) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void update(Roles entity) {
+		this.dao.update(entity);
+	}
+
+	@Override
+	public void updateHistorico(Roles entity) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Long countActiveRecords(Class<Roles> entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Long findNextCve() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Long findNextId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Long getCveUsuario() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Transactional
+	public void agregarRol(String nombre, String descripcion, Integer activo,Long... cveModulo) {
+		try {
+				Roles rol = new Roles();
+				rol.setRol(nombre);
+				rol.setDescripcion(descripcion);
+				rol.setActivo(activo);
+				this.insert(rol);
+				if(cveModulo!=null){
+					for(Long cve:cveModulo){
+						RolesModulos rolModulo = new RolesModulos();
+						Modulos modulo = new Modulos();
+						modulo.setCve(cve);
+						rolModulo.setModulos(modulo);
+						rolModulo.setRoles(rol);
+						RolesModulosId id = new RolesModulosId();
+						id.setCveModulo(cve);
+						id.setRol(rol.getRol());
+						rolModulo.setId(id);
+						this.rolModuloServicio.insert(rolModulo);
+					}
+				}	
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en RolServicio - agregarRol: ",e);
+		}
+	}
+
+	@Transactional
+	public void editarRol(String nombre, String descripcion, Integer activo,Long... cveModulo) {
+		try {
+			boolean resul = false;
+			Roles rol = new Roles();
+			
+			rol.setRol(nombre);
+			rol.setDescripcion(descripcion);
+			rol.setActivo(activo);
+			this.update(rol);
+			
+			List<RolesModulos> modulos = this.rolModuloDao.getByRol(nombre);
+			for(RolesModulos m:modulos){
+				for(Long c:cveModulo){
+					if(c==m.getModulos().getCve()){
+						resul = true;
+						break;
+					}
+				}
+				if(!resul){
+					this.rolModuloServicio.delete(m);					
+				}
+				resul = false;
+			}
+			resul = false;
+			modulos = this.rolModuloDao.getByRol(nombre);
+			for(Long c:cveModulo){
+				for(RolesModulos m:modulos){
+					if(m.getModulos().getCve()==c){
+						resul = true;
+						break;
+					}
+				}
+				if(!resul){				
+					RolesModulos rolModulo = new RolesModulos();
+					Modulos modulo = new Modulos();
+					modulo.setCve(c);
+					rolModulo.setModulos(modulo);
+					rolModulo.setRoles(rol);
+					RolesModulosId id = new RolesModulosId();
+					id.setCveModulo(c);
+					id.setRol(rol.getRol());
+					rolModulo.setId(id);
+					this.rolModuloServicio.insert(rolModulo);					
+				}
+				resul = false;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en RolServicio - editarRol: ",e);
+		}
+		
+	}
+
+}

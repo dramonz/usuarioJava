@@ -1,0 +1,138 @@
+Ext.ClassManager.create('PR.controller.AsignarRolUsuarios', {
+	extend: 'Ext.app.Controller',
+	views: ['usuario.AgregarUsuario','usuario.AsignarRolUsuarioGrid'],
+	stores:['Empleados','Roles','UsuariosRoles','EditarUsuariosGrid'],
+	models:['Empleado','Rol','UsuarioRol','EditarUsuarioGrid'],
+	requires: ['PR.util.Namespace'],
+	
+	widgets: [],
+	
+	init: function() {
+		this.control({
+			'#cmb-usuario':{select:this.onSelectCmbUsuario,keypress:this.onKeyPressUsuario},
+			'#btn-asignar-rol':{click:this.onClickBtnAsignarRol},
+			'asignarRolUsuarioGrid actioncolumn':{click:this.onClickActionColumn}
+		});
+		Ext.EventManager.onWindowResize(this.onWindowResizeListener, this);
+	},
+	/**
+	 * Carga el store con los tres primeros caracteres que optiene
+	 * @param _this
+	 * @param event
+	 */
+	onKeyPressUsuario:function(_this,event){
+		if(_this.rawValue.length>5) return;
+		var str = _this.rawValue+String.fromCharCode(event.getKey());
+		if(str.length==5){
+			_this.store.load({params:{usuario:str}});
+		}else if(str.length<6){
+			_this.store.removeAll();
+		}
+	},
+	eliminarRol:function(rowIndex){
+		var store = Ext.getStore('UsuariosRoles');
+		var cveUsuario = store.getAt(rowIndex).get('cveUsuario');
+		var rol = store.getAt(rowIndex).get('rol');
+		var eliminar = function(){
+			Ext.Ajax.request({		
+				url: Namespace.namespace + 'asignarRolUsuario/eliminarRol',
+				method:'POST',
+				params: {cveUsuario: cveUsuario,rol: rol},
+				timeout : 600000000,
+				success: function(response) {
+				var object = Ext.decode(response.responseText);
+				if (object.success) {
+					Ext.Msg.show({
+						title: 'Aviso',
+						buttons: Ext.Msg.OK,
+						icon: Ext.Msg.INFO,
+						msg: 'Los datos fueron eliminados con exito'
+						});	
+						Ext.getStore('UsuariosRoles').load({params:{cveUsuario:cveUsuario}});
+				}else{ 
+					Ext.MessageBox.show({
+						title: 'Aviso',
+						msg: object.msg,
+						icon: Ext.MessageBox.INFO,
+						buttons: Ext.MessageBox.OK,
+						closable:false
+					});
+				}
+			} 			
+		});
+		};
+		Ext.Msg.show({
+			title: 'Aviso',
+			buttons: Ext.Msg.YESNO,
+			icon: Ext.Msg.INFO,
+			closable :false,
+			msg: '¿Desea eliminar el rol?',
+			fn: function(btn) {
+				if (btn == 'yes') {
+					eliminar();
+				}
+			}
+		});
+	
+	},
+	onClickActionColumn: function(grid, cell, rowIndex, colIndex, e) {
+		if (e.target.className.indexOf('eliminar-rol-icon') != -1) {
+			this.eliminarRol(rowIndex);
+		}
+	},
+	onClickBtnAsignarRol:function(btn){
+		var guardar = function(form,cveUsuario){
+			form.getForm().submit({
+				url:Namespace.namespace+'asignarRolUsuario/asignarRol',
+				waitTitle:'Agregando Empleado',
+	         	waitMsg: 'Guardando...',
+				success: function (form, action) {	
+					Ext.Msg.show({
+					title: 'Aviso',
+					buttons: Ext.Msg.OK,
+					icon: Ext.Msg.INFO,
+					msg: 'Los datos fueron guardados con exito'
+					});	
+					Ext.getStore('UsuariosRoles').load({params:{cveUsuario:cveUsuario}});
+				},
+				failure: function (form, action) {
+					if (!action || !action.result) {
+						Ext.MessageBox.alert('Error', 'Problemas en la conexion');
+						return;
+					}
+					Ext.MessageBox.alert('Error', 'Ocurrio un error al registrar al empleado');
+					}
+				});
+		};
+		
+		var form = btn.up().up();
+		var cveUsuario = btn.up().up().down('#cmb-usuario').getValue();
+		var rol = btn.up().up().down('#idRolUsuario').getValue();
+		var store = Ext.getStore('UsuariosRoles');
+		
+		if(store.findExact('rol',rol)==-1){		
+			guardar(form,cveUsuario);
+		}else{
+			Ext.Msg.show({
+				title: 'Aviso',
+				buttons: Ext.Msg.OK,
+				icon: Ext.Msg.WARNING,
+				msg: 'El rol ya esta asignado'
+				});
+		}
+	},
+	onSelectCmbUsuario:function(cmb){
+		Ext.getStore('UsuariosRoles').clearFilter();
+		Ext.getStore('UsuariosRoles').load({params:{cveUsuario:cmb.getValue()}});
+	},
+
+	/**
+	 * Función que escucha al evento onWindowResize, es la encargada de aplicar
+	 * el redimensionado a los widgets contenidos en {widget}.
+	 */
+	onWindowResizeListener: function() {
+		for (var i = 0, l = this.widgets.length; i < l; i++) {
+			this.widgets[i].doComponentLayout();
+		}
+	}
+});

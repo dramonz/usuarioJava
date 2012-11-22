@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<querys>
+
+<dependencias>
+SELECT
+		dependencias.id AS id_dependencia,
+		codigo_dependencia,
+		CONCAT( codigo_dependencia, CONCAT(' - ',
+		nombre_dependencia)) AS nombre,
+		sectores.id as id_sector
+		FROM
+		dependencias
+		LEFT JOIN sectores USING (cve_sector)
+		WHERE
+		nombre_dependencia != '-1'
+		AND dependencias.activo = 1
+		AND dependencias.ejercicio = %s
+</dependencias>
+
+<dependenciascatalogo>
+SELECT
+		ROWNUM FILA,
+		d.ID,
+		d.CODIGO_DEPENDENCIA,
+		d.NOMBRE_DEPENDENCIA,
+		d.DESC_DEPENDENCIA,
+		s.ID ID_SECTOR,
+		z.NOMBRE_SECTOR,
+		d.CENTRAL
+		FROM
+		DEPENDENCIAS d
+		LEFT JOIN SECTORES s ON
+		(s.CVE_SECTOR = d.CVE_SECTOR)
+		LEFT JOIN SECTORES z ON (z.ID = s.ID)
+		WHERE
+		d.ACTIVO = 1
+		AND z.ACTIVO = 1
+		ORDER BY ID DESC
+</dependenciascatalogo>
+
+<unidades>
+select
+		cve_unidad,
+		id_unidad,
+		codigo_unidad,concat(
+		codigo_unidad, concat(' - ', nombre_unidad)) as nombre,
+		id_dependencia,
+		codigo_grupo
+		from
+		vw_unidades
+		left join dependencias using
+		(cve_dependencia)
+		where vw_unidades.ejercicio = %s
+		order by
+		nombre_unidad
+</unidades>
+
+<unidadescatalogo>
+SELECT
+		u.ID,
+		u.CODIGO_UNIDAD,
+		u.NOMBRE_UNIDAD,
+		u.DESC_UNIDAD,
+		d.ID ID_DEPENDENCIA,
+		de.NOMBRE_DEPENDENCIA
+		FROM
+		UNIDADES u
+		LEFT JOIN DEPENDENCIAS d ON (u.CVE_DEPENDENCIA = d.CVE_DEPENDENCIA)
+		LEFT JOIN DEPENDENCIAS de ON (de.ID = d.ID)
+		WHERE
+		u.ACTIVO = 1
+		AND
+		de.ACTIVO = 1
+		ORDER BY ID DESC
+</unidadescatalogo>
+
+<funciones>
+select
+		cve_funcion,
+		id as id_funcion,
+		codigo_funcion,
+		concat(
+		codigo_funcion , concat(' - ', nombre_funcion )) as nombre
+		from
+		funciones
+		where
+		nombre_funcion != '-1'
+		and activo = 1
+		and funciones.ejercicio = %s
+		order by
+		nombre_funcion
+</funciones>
+
+<proyectoscatalogo>
+select
+		proyectos.ejercicio,
+		proyectos.num_proyecto,
+		dependencias.id
+		from
+		proyectos
+		left join unidades using (cve_unidad)
+		left
+		join dependencias using (cve_dependencia)
+		where
+		proyectos.activo=1
+		order
+		by
+		dependencias.id
+</proyectoscatalogo>
+
+<funcionescatalogo>
+SELECT
+		f.ID,
+		f.CODIGO_FUNCION,
+		f.NOMBRE_FUNCION,
+		f.DESC_FUNCION,
+		fi.ID ID_FINALIDAD,
+		fn.NOMBRE_FINALIDAD
+		FROM
+		FUNCIONES f
+		LEFT JOIN FINALIDADES fi ON (f.CVE_FINALIDAD = fi.CVE_FINALIDAD)
+		LEFT
+		JOIN FINALIDADES fn ON (fn.ID = fi.ID)
+		WHERE
+		f.ACTIVO = 1
+		AND fn.ACTIVO =
+		1
+		ORDER BY ID DESC
+</funcionescatalogo>
+
+<subfunciones>
+select
+		cve_subfuncion,
+		subfunciones.id as id_subfuncion,
+		codigo_subfuncion,
+		concat(codigo_subfuncion,
+		concat(' - ',
+		nombre_subfuncion) ) as nombre,
+		funciones.id as id_funcion
+		from
+		subfunciones
+		left join funciones using (cve_funcion)
+		where
+		nombre_subfuncion != '-1'
+		and subfunciones.activo = 1
+		and subfunciones.ejercicio = %s
+		order by
+		nombre_subfuncion
+</subfunciones>
+
+<sectores>
+select
+		cve_sector,
+		id id_sector,
+		codigo_sector,
+		concat(
+		codigo_sector , concat(' - ', nombre_sector ) ) as nombre
+		from
+		sectores
+		where
+		nombre_sector != '-1'
+		and activo = 1
+		and sectores.ejercicio = %s
+		order by nombre_sector
+</sectores>
+<roles>
+select rol,descripcion from roles where rol!='IS_AUTHENTICATED_FULLY'
+</roles>
+<empleados>
+    select 
+        cve_empleado, 
+        nombre_completo,
+        area,
+        puesto,
+        correo_electronico,
+        cve_unidad,concat(codigo_unidad,concat(' - ' , nombre_unidad)) as "unidad",u.id as "id_unidad"
+     from Empleados
+     join unidades u using (cve_unidad)
+</empleados>
+<subsectores>
+select
+		cve_subsector,
+		subsectores.id,
+		codigo_subsector,
+		concat( codigo_subsector , concat(' - ' , nombre_subsector)) as
+		nombre,
+		sectores.id id_sector
+		from
+		subsectores
+		left join sectores using
+		(cve_sector)
+		where
+		nombre_subsector != '-1'
+		and subsectores.activo = 1
+		and subsectores.ejercicio = %s
+		order by nombre_subsector
+</subsectores>
+
+<municipios>
+select
+		cve_municipio,
+		cve_estado,
+		codigo_municipio,
+		concat(
+		codigo_municipio , concat(' - ' , nombre_municipio )) as nombre
+		from
+		municipios
+		where
+		cve_estado = 27
+		and nombre_municipio != '-1'
+		and municipios.ejercicio = %s
+		order by
+		nombre_municipio
+</municipios>
+
+<localidades>
+select
+		cve_localidad,
+		cve_municipio,
+		concat( codigo_localidad
+		, concat(' - ' , nombre_localidad )) as
+		nombreLocalidad
+		from
+		localidades
+		where
+		cve_municipio in (select cve_municipio from municipios where
+		cve_estado = 27)
+		and nombre_localidad != '-1'
+		and localidades.ejercicio = %s
+		order by nombre_localidad
+</localidades>
+
+<prioridades>
+SELECT 
+	NUM_PROYECTO,
+	p.EJERCICIO
+FROM 
+	PROYECTOS p 
+	LEFT JOIN UNIDADES USING (CVE_UNIDAD) 
+WHERE 
+	p.ACTIVO = 1 
+	AND CODIGO_UNIDAD IN (SELECT CODIGO_UNIDAD FROM UNIDADES_GRUPOS WHERE CODIGO_GRUPO = '%s')
+	AND p.EJERCICIO = %s
+</prioridades>
+
+
+<tipos_proyectos>
+select
+		cve_tipo_proyecto,
+		id id_tipo_proyecto,
+		codigo_tipo_proyecto,
+		nombre_tipo_proyecto
+		from
+		tipos_proyectos
+		where
+		activo = 1
+		and nombre_tipo_proyecto != '-1'
+		and tipos_proyectos.ejercicio = %s
+		order by
+		nombre_tipo_proyecto
+</tipos_proyectos>
+
+<clasificaciones>
+select
+		cve_clasificacion, id id_clasificacion,
+		codigo_clasificacion, nombre_clasificacion from
+		clasificaciones where
+		activo =1 and nombre_clasificacion != '-1'
+		and clasificaciones.ejercicio = %s 
+		order by nombre_clasificacion
+</clasificaciones>
+
+<fuentes>
+select cve_fuente, fuentes.id as id_fuentes, codigo_fuente,
+		nombre_fuente
+		from fuentes where activo = 1 and nombre_fuente != '-1'
+		and fuentes.ejercicio = %s
+		order by
+		nombre_fuente
+</fuentes>
+
+<procedencias>
+select cve_procedencia, procedencias.id as
+		id_procedencia,
+		codigo_procedencia, concat( codigo_procedencia ,
+		concat(' - ' ,
+		nombre_procedencia)) nombre, fuentes.id id_fuente from
+		procedencias
+		left join fuentes using (cve_fuente) where
+		procedencias.activo = 1 
+		and procedencias.ejercicio = %s 
+		and nombre_procedencia!= '-1' order by
+		nombre_procedencia
+</procedencias>
+
+<antecedentes>
+select cve_antecedente, antecedentes.id id_antecedente,
+		codigo_antecedente,
+		nombre_antecedente from antecedentes where activo =
+		1 and antecedentes.ejercicio = %s AND
+		nombre_antecedente != '-1' order by nombre_antecedente
+</antecedentes>
+	
+<participaciones>
+select cve_participacion, id as id_participacion,
+		codigo_participacion,
+		nombre_participacion from participaciones where
+		activo = 1 and participaciones.ejercicio = %s AND
+		nombre_participacion != '-1' order by
+		nombre_participacion
+</participaciones>	
+
+<pled>
+select cve_pled, id as id_pled, codigo_pled, concat( codigo_pled,
+		concat(' - ',concat( concat(pagina_pled,concat(':', parrafo_pled)),
+		concat(' - ',desc_pled)))) as desc_pled, pagina_pled, parrafo_pled from
+		pled
+		where nivel_pled = 4 AND activo = 1 AND desc_pled != '-1' 
+		and pled.ejercicio = %s order by
+		codigo_pled, pagina_pled, parrafo_pled
+</pled>
+	
+<ejecuciones>
+select cve_ejecucion, ejecuciones.id id_ejecucion,
+		codigo_ejecucion,
+		nombre_ejecucion from ejecuciones where
+		nombre_ejecucion != '-1' 
+		and ejecuciones.ejercicio = %s
+		order
+		by nombre_ejecucion
+</ejecuciones>
+
+<demandas>
+select cve_demanda, demandas.id id_demanda, codigo_demanda,
+		nombre_demanda
+		from demandas where nombre_demanda != '-1'
+		and demandas.ejercicio = %s 
+		order by nombre_demanda
+</demandas>
+
+<beneficiarios>
+select cve_tipo_beneficiario, id id_tipo_beneficiario,
+		codigo_tipo_beneficiario, concat( codigo_tipo_beneficiario , concat(' - ', nombre_tipo_beneficiario)) as nombre from tipos_beneficiarios
+		where nombre_tipo_beneficiario != '-1' 
+		and ejercicio = %s
+		order by
+		nombre_tipo_beneficiario
+</beneficiarios>
+
+<programas>
+	select cve_programa, id as id_programa, codigo_programa,
+		concat(codigo_programa, concat(' - ',nombre_programa)) as nombre 
+		from programas where activo = 1 and programas.ejercicio = %s
+		order by nombre_programa
+</programas>	
+
+<subprogramas>
+	select 
+    cve_subprograma, subprogramas.id as
+        id_subprograma,
+        codigo_subprograma, concat( codigo_subprograma ,
+        concat(' - ',
+        nombre_subprograma) )nombre, programas.id as id_programa
+ from 
+    programas_subprogramas 
+    left join programas using (cve_programa) 
+    left join subprogramas using( cve_subprograma) 
+ where 
+    programas_subprogramas.activo= 1 
+    AND programas_subprogramas.ejercicio = %s
+ order by 
+    nombre_subprograma
+</subprogramas>	
+<unidades_medidas>
+	select cve_unidad_medida, id, codigo_unidad_medida,
+		concat(
+		codigo_unidad_medida , concat(' - ', nombre_unidad_medida )) as
+		nombre
+		from unidades_medidas where 
+		activo = 1 and nombre_unidad_medida	!= '-1' 
+		and unidades_medidas.ejercicio = %s
+		order by nombre_unidad_medida
+</unidades_medidas>
+<cog_partidas>
+select cve_cog_partida, id, codigo_cog_partida as codigo,
+		nombre_cog_partida
+		as nombre, desc_cog_partida as descripcion from
+		cog_partidas where
+		activo = 1 
+		and cog_partidas.ejercicio = %s
+		order by codigo
+</cog_partidas>
+</querys>

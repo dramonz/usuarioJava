@@ -1,0 +1,109 @@
+html, body {
+	padding: 0;
+	margin: 0;
+	font-size: 12px;
+	font-family: Verdana;
+	min-width: 960px !important
+}
+
+.header {
+	background: url('../images/header-background.jpg') repeat-x;
+	width: 100%;
+	height: 78px;
+	border-bottom: 4px solid #ffffff
+}
+
+.header-content {
+	width: 95%;
+	margin: 0 auto
+}
+
+.siafe-logo {
+	background: url('../images/siafe-logo.png') no-repeat;
+	width: 301px;
+	height: 75px;
+	float: left
+}
+
+.main-options {
+	float: right;
+	border-right: 1px solid #8a050c;
+	border-left: 1px solid #e43d45
+}
+
+.main-options ul {
+	margin: 0;
+	padding: 0;
+	list-style: none
+}
+
+.main-options ul  li{
+	float: left;
+	width: 78px;
+	height: 74px;
+	border-left: 1px solid #8a050c;
+	border-right: 1px solid #e43d45
+}
+
+.main-options ul li a {
+	width: 78px;
+	height: 74px;
+	display: block;
+	text-decoration: none
+}
+
+.home-option a {
+	background: url('../images/home-icon.png') no-repeat
+}
+
+.home-option a:hover {
+	background: url('../images/active-home-icon.png') no-repeat
+}
+
+.help-option a {
+	background: url('../images/help-icon.png') no-repeat
+}
+
+.help-option a:hover {
+	background: url('../images/active-help-icon.png') no-repeat
+}
+
+.user-profile-option a {
+	background: url('../images/user-profile-icon.png') no-repeat
+}
+
+.user-profile-option a:hover {
+	background: url('../images/active-user-profile-icon.png') no-repeat
+}
+
+.logout-option a {
+	background: url('../images/logout-icon.png') no-repeat
+}
+
+.logout-option a:hover {
+	background: url('../images/active-logout-icon.png') no-repeat
+}
+
+.user-bar {
+	background: url('../images/userbar-background.jpg') repeat-x;
+	width: 100%;
+	height: 25px
+}
+
+.user-info {
+	color: #fff;
+	float: left;
+	font-weight: bold;
+	line-height: 24px;
+	margin-left: 10px;
+	padding-left: 20px
+}
+
+.user-entity {
+	color: #fff;
+	float: right;
+	font-weight: bold;
+	line-height: 24px;
+	margin-right: 10px;
+	padding-right: 20px;
+}

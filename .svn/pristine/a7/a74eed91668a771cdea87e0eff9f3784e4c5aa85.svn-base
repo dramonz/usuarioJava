@@ -1,0 +1,173 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title><fmt:message key="title.default"/></title>
+	<link rel="shortcut icon"  href="<c:url value="/resources/images/icon.png" />"/>
+	
+	<link type="text/css" rel="stylesheet" media="screen" href="<c:url value="/resources/css/ext-all.css" />" />
+	<link type="text/css" rel="stylesheet" media="screen" href="<c:url value="/resources/css/modules.css" />" />
+	<link type="text/css" rel="stylesheet" href="<c:url value="/resources/css/login.css" />" />
+	
+	<script type="text/javascript" src="<c:url value="/ext/ext-all.js" />"></script>
+	<script type="text/javascript" src="<c:url value="/resources/js/jquery.js" />"></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		if (window.parent.document && window.parent.document != document) {
+			window.parent.location.reload();
+		}
+		
+		var h = $(document).height() - 214;
+		$(document.getElementById('login-container')).css('height', h + 'px');
+		var h2 = (h - $(document.getElementById('login-form-container')).height()) / 2;
+		$(document.getElementById('login-form-container')).css('padding-top', h2 + 'px');
+		
+		$(document.getElementById('forgot_pass')).click(function() {
+			var win = new Ext.Window({
+				title: 'Proporcione la siguiente información y lo ayudaremos a entrar en su cuenta.',
+		  		height:100,	width: 440,
+				closable:false,
+				items  : [{	
+				    xtype: 'textfield',
+				    name: 'usuario',
+				    id: 'idUsuario',
+				    fieldLabel: 'Usuario',
+				    allowBlank: false, 
+				    labelWidth: 70,
+				    labelPad: 20,
+				    margin: '10,0,10,-30',
+				    labelAlign: 'right',
+				    width: 400}],         
+				dockedItems: [{	
+						xtype: 'toolbar',
+						cls:'grid-toolbar',
+						dock: 'bottom',
+						items: ['->', 
+						        {
+								text: 'Aceptar',
+								handler: function() {
+									if(Ext.getCmp('idUsuario').getValue()==''){
+										Ext.getCmp('idUsuario').focus();
+									}else{
+										Ext.Ajax.request({
+			   								url: "recuperarcontrasenia",
+			   			 					method:'POST',
+			    							params: {"usuario": Ext.getCmp('idUsuario').getValue()},
+			    							success: function(response){
+				    							Ext.Msg.show({title: 'Aviso',buttons: Ext.Msg.OK,icon: Ext.Msg.INFO,
+												msg: 'Se envio un correo con su nueva contraseña',
+												fn: function(btn) {	}
+												});
+			      			 				var text = response.responseText;
+			      			  				if(!text){Ext.MessageBox.alert('Error', 'Error al enviar los datos');};
+			   						 		},
+			   								failure: function (form, action) {
+												if (!action || !action.result) {Ext.MessageBox.alert('Error', 'Error en la conexion');return;}
+												Ext.MessageBox.alert('Error', action.result.msg);
+												}
+			    						});
+										win.hide();
+									}																	
+								}	
+								}, {
+								text: 'Cancelar',
+								handler: function() {
+									Ext.getCmp('idUsuario').setValue('');
+									win.hide();}	
+									}]
+				}]
+			});	win.show();	
+			return false;
+		});
+	});
+	</script>
+</head>
+<body>
+	<div class="container">
+		<div class="login-header">
+			<div class="siafe-logo"></div>
+		</div>
+		<div class="user-bar"></div>
+		<div id="login-container" class="login-container">
+			<div id="login-form-container">
+				<c:if test="${not empty param.error}">
+					<div class="login-error">
+					${fn:replace(SPRING_SECURITY_LAST_EXCEPTION.message, 'Maximum sessions of 1 for this principal exceeded', 'Excede el número de sesiones activas.')}</div>
+				</c:if>				
+				<div id="login-form" class="login-form-container">
+					<div class="login-title"><fmt:message key="login.title"/></div>
+					<form action="<c:url value="/j_spring_security_check"/>" method="post"id="id_form">
+						<fieldset>
+							<div class="login-fields">
+								<div class="fields-group">
+									<div class="label">
+										<label for="usuario"><fmt:message key="login.user"/></label>
+									</div>
+									<div class="field">
+										<input type="text" id="usuario" name="j_username" />
+									</div>
+								</div>
+								<div class="fields-group">
+									<div class="label">
+										<label for="password"><fmt:message key="login.password"/></label>
+									</div>
+									<div class="field">
+										<input type="password" id="password" name="j_password" />
+									</div>
+								</div>
+							</div>
+							<div class="login-options">
+								<div class="forgot-password">
+								
+									<a id="forgot_pass" href="#" title="Contacte a su administrador"><fmt:message key="login.forgot.password"/></a>
+								
+								</div>
+								<div class="submit-button">
+									<%-- <input type="submit" value="<fmt:message key="login.enter"/>" /> --%>
+									<input type="submit" value="<fmt:message key="login.enter"/>" onClick="validar_form()"/>
+									<script type="text/javascript" >
+                               			function validar_form () {
+                                               var form = document.getElementById("id_form");
+                                               var login = document.getElementById("usuario");
+                                               var password = document.getElementById("password");
+                                               if (login.value != "" && password.value != "") form.submit();
+                                               else {
+                                                        alert("El login y password no pueden estar vacios.");
+                                               }
+                               }
+                               var user = "${usuario}";
+                               var pass = "${pass}";
+                               if (user != "" && pass != "") {
+                                            var login = document.getElementById("usuario");
+                                             var password = document.getElementById("password");
+								login.value = user;
+                                               password.value = pass;
+                                               validar_form();
+                               }
+                </script>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div style="clear: both;"></div>
+		<div class="footer">
+			<div class="footer-content">
+				<div class="saf-logo"></div>
+				<div class="footer-info">
+<!-- 					<span>Soporte: </span> <span class="email">soporte@pse.mx</span> -->
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--  <script type="text/javascript" src="<c:url value="/resources/js/ext-override.js" />"></script>-->
+</body>
+</html>

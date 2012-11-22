@@ -1,0 +1,20 @@
+body {
+	padding: 0;
+	margin: 0;
+	font-size: 12px;
+	font-family: Verdana;
+}
+
+.footer {
+	background: url('../images/footer-background.jpg') repeat-x;
+	width: 100%;
+	border-top: 1px solid #ababab;
+	height: 25px;
+}
+
+.footer-content {
+	width: 95%;
+	margin: 0 auto;
+	color: #a2a2a2;
+	line-height: 25px;
+}

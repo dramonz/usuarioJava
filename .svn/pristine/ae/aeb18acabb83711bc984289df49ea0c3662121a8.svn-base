@@ -1,0 +1,20 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.controladores.helper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Roles;
+import mx.gob.tabasco.saf.siafe.presupuesto.controladores.F2B.RolF2B;
+
+public class RolHelper {
+
+	public static List<RolF2B> convertListModelToListF2B(List<Roles> roles) {
+		List<RolF2B> rolesF2B = new ArrayList<RolF2B>();
+		for (Roles rol : roles) {
+			RolF2B rolF2B = new RolF2B(rol.getRol(), rol.getDescripcion(), rol.getActivo());
+			rolesF2B.add(rolF2B);
+		}
+		return rolesF2B;
+	}
+	
+}

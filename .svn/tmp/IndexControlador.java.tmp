@@ -1,0 +1,245 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.controladores;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+<<<<<<< .mine
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.CustomUserDetails;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.HistorialSesiones;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Usuarios;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.HistorialSesionesServicio;
+
+=======
+>>>>>>> .r11750
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+@Controller
+@RequestMapping("/")
+public class IndexControlador {
+	
+	protected final Logger log = Logger.getLogger(this.getClass());
+	@Resource HistorialSesionesServicio hServicio;
+
+//	@RequestMapping(method = RequestMethod.GET)
+//	public ModelAndView index(HttpServletRequest request) {
+//		Map<String, String> respuesta = new HashMap<String, String>();
+//		CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication();
+//		
+//		for (GrantedAuthority authority : user.getAuthorities()) {
+//			if (authority.toString().compareTo("ROLE_ADMIN") == 0) {
+//				respuesta.put("rol", "ROLE_ADMIN");
+//				break;
+//			}
+//			
+//			respuesta.put("rol", "ROLE_USER");
+//		}
+//		
+//		try {
+//			log.info("Insertando el Historial de session ");
+////			hServicio.insertSesion(new HistorialSesiones(), request);
+//		} catch (Exception e) {
+//			log.error("Error al insertar el Historial de session: ", e);
+//		}
+//		
+//		return new ModelAndView("index/index", "respuesta", respuesta);
+//	}
+	@RequestMapping(method = RequestMethod.GET)
+<<<<<<< .mine
+	public ModelAndView index(HttpServletRequest request, ModelMap model) {
+		Map<String, Object> respuesta = new HashMap<String, Object>();
+		CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication();
+		
+		for (GrantedAuthority authority : user.getAuthorities()) {
+			if (authority.toString().compareTo("ROLE_ADMIN") == 0) {
+				respuesta.put("rol", "ROLE_ADMIN");
+				break;
+			}
+			
+			respuesta.put("rol", "ROLE_USER");
+		}
+		
+		try {
+			log.info("Insertando el Historial de session ");
+			hServicio.insertSesion(new HistorialSesiones(), request);
+		} catch (Exception e) {
+			log.error("Error al insertar el Historial de session: ", e);
+		}
+		respuesta.put("sessionTimeout", request.getSession().getMaxInactiveInterval());
+		return new ModelAndView("index/index", "respuesta", respuesta);
+=======
+	public ModelAndView index(HttpServletRequest request, ModelMap model) {
+		model.addAttribute("sessionTimeout", request.getSession().getMaxInactiveInterval()/60);
+		return new ModelAndView("index/index", model);
+>>>>>>> .r11750
+	}
+	
+//	@RequestMapping(value = "/header", method = RequestMethod.GET)
+//	public ModelAndView header() {
+//		Map<String, Object> respuesta = new HashMap<String, Object>();
+//		CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication();
+//		
+//		respuesta.put("usuario", ((Usuarios) user.getDetails()).getEmpleados().getNombreCompleto());
+//		respuesta.put("ejercicio", 2011);
+//		
+//		return new ModelAndView("index/header", "respuesta", respuesta);
+//	}
+	@RequestMapping(value = "/header", method = RequestMethod.GET)
+	public String header() {
+		return "index/header";
+	}
+	
+//	@RequestMapping(value = "/footer", method = RequestMethod.GET)Se comento para la modificacion de sesion
+//	public String footer() {
+//		return "index/footer";
+//	}
+	
+	@RequestMapping(value = "/footer", method = RequestMethod.GET)
+	public String footer() {
+		return "index/footer";
+	}
+//	@RequestMapping(value = "/menu", method = RequestMethod.GET)
+//	@ResponseBody
+//	public Map<String, Tree> tree() {
+//		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//		Collection<GrantedAuthority> authorities = auth.getAuthorities();
+//		GrantedAuthority authority = new GrantedAuthorityImpl("ROLE_ADMIN");
+//		if (authorities.contains(authority)) {
+//			Tree tree = new BasicTree(true);
+//			//PROYECTOS
+//			Node proyectos = new BasicNode("Proyectos", false, true);
+//					Node cedulaBasica = new BasicNode("Captura de Cédula Básica", "proyectos/cedulabasica/capturarBorrador/", "content-frame", true);
+//					proyectos.addChild(cedulaBasica);
+//					Node consultarCedula = new BasicNode("Consulta de Proyectos", "proyectos/cedulabasica/consultas", "content-frame", true);
+//					proyectos.addChild(consultarCedula);
+//					Node AprobacionCedula = new BasicNode("Aprobación de Proyectos", "proyectos/cedulabasica/aprobar", "content-frame", true);
+//					proyectos.addChild(AprobacionCedula);
+//					Node ConsultaPrioridades = new BasicNode("Consulta de Prioridades", "proyectos/cedulabasica/consultarPrioridad?cveDependencia=1", "content-frame", true);
+//					proyectos.addChild(ConsultaPrioridades);
+//			tree.addChildren(proyectos);
+//					//PARTIDAS PRESUPUESTALES
+//			Node partidas = new BasicNode("Partidas Presupuestales", false, true);
+//					Node consultaPartidas = new BasicNode("Consulta de Partidas", "proyectos/partidas/consultas", "content-frame", true);
+//					partidas.addChild(consultaPartidas);
+//					Node aprobarPartidas = new BasicNode("Aprobaci�n de Partidas", "proyectos/partidas/aprobar", "content-frame", true);
+//					partidas.addChild(aprobarPartidas);
+//			tree.addChildren(partidas);
+//					//CATALOGOS
+//			Node catalogos = new BasicNode("Catálogos", false, true);
+//					Node antecedentes = new BasicNode("Antecedentes", "catalogos/antecedentes", "content-frame", true);
+//					catalogos.addChild(antecedentes);
+//					Node clasificaciones = new BasicNode("Clasificaciones", "catalogos/clasificaciones", "content-frame", true);
+//					catalogos.addChild(clasificaciones);
+//					Node Demandas = new BasicNode("Demandas", "catalogos/demandas", "content-frame", true);
+//					catalogos.addChild(Demandas);
+//					Node Dependencias = new BasicNode("Dependencias", "catalogos/dependencias", "content-frame", true);
+//					catalogos.addChild(Dependencias);
+//					Node Ejecuciones = new BasicNode("Ejecuciones", "catalogos/ejecuciones", "content-frame", true);
+//					catalogos.addChild(Ejecuciones);
+//					Node Finalidades = new BasicNode("Finalidades", "catalogos/finalidades", "content-frame", true);
+//					catalogos.addChild(Finalidades);
+//					Node Fuentes = new BasicNode("Fuentes", "catalogos/fuentes", "content-frame", true);
+//					catalogos.addChild(Fuentes);
+//					Node Funciones = new BasicNode("Funciones", "catalogos/funciones", "content-frame", true);
+//					catalogos.addChild(Funciones);
+//					Node Participaciones = new BasicNode("Participaciones", "catalogos/participaciones", "content-frame", true);
+//					catalogos.addChild(Participaciones);
+//					Node Prioridades = new BasicNode("Prioridades", "catalogos/prioridades", "content-frame", true);
+//					catalogos.addChild(Prioridades);
+//					Node Procedencias = new BasicNode("Procedencias", "catalogos/procedencias", "content-frame", true);
+//					catalogos.addChild(Procedencias);
+//					Node Programas = new BasicNode("Programas", "catalogos/programas", "content-frame", true);
+//					catalogos.addChild(Programas);
+//					Node Sectores = new BasicNode("Sectores", "catalogos/sectores", "content-frame", true);
+//					catalogos.addChild(Sectores);
+//					Node Unidades = new BasicNode("Unidades", "catalogos/unidades", "content-frame", true);
+//					catalogos.addChild(Unidades);
+//					Node UnidadMedida = new BasicNode("Unidades de Medida", "catalogos/unidadesmedida", "content-frame", true);
+//					catalogos.addChild(UnidadMedida);
+//			tree.addChildren(catalogos);
+//					//ANTEPROYECTOS
+//			Node Anteproyectos = new BasicNode("Anteproyectos", false, true);
+//					Node cedulaBasica1 = new BasicNode("Captura de Cédula Básica", "proyectos/cedulabasica/capturarBorrador/", "content-frame", true);
+//					proyectos.addChild(cedulaBasica1);
+//					Node consultarCedula1 = new BasicNode("Partidas", "proyectos/partidas/aprobar", "content-frame", true);
+//					proyectos.addChild(consultarCedula1);
+//					Node AprobacionCedula1 = new BasicNode("Paquete Presupuestal", "proyectos/partidas/aprobar", "content-frame", true);
+//					proyectos.addChild(AprobacionCedula1);
+//					Node ConsultaProyectos = new BasicNode("Consulta de Proyectos", "proyectos/cedulabasica/consultas", "content-frame", true);
+//					proyectos.addChild(ConsultaProyectos);
+//					Node Preaprobar = new BasicNode("Preaprobar Proyectos", "proyectos/cedulabasica/preaprobar", "content-frame", true);
+//					proyectos.addChild(Preaprobar);
+//					Node ConsultaPrioridades1 = new BasicNode("Consulta de Prioridades", "proyectos/cedulabasica/consultarPrioridad?cveDependencia=1", "content-frame", true);
+//					proyectos.addChild(ConsultaPrioridades1);
+//			tree.addChildren(Anteproyectos);
+//			
+//			Map<String, Tree> response = new HashMap<String, Tree>();
+//			response.put("roo", tree);
+//			
+//			return response;
+//		} 
+//		else 
+//		{
+//			Tree tree = new BasicTree(true);
+//			//PROYECTOS
+//			Node proyectos = new BasicNode("Proyectos", false, true);
+//				Node cedulaBasica = new BasicNode("Captura de Cédula Básica", "proyectos/cedulabasica/capturarBorrador/", "content-frame", true);
+//				proyectos.addChild(cedulaBasica);
+//				Node consultarCedula = new BasicNode("Consulta de Proyectos", "proyectos/cedulabasica/consultas", "content-frame", true);
+//				proyectos.addChild(consultarCedula);
+//				/*Node AprobacionCedula = new BasicNode("Aprobación de Proyectos", "proyectos/cedulabasica/aprobar", "content-frame", true);
+//				proyectos.addChild(AprobacionCedula);*/
+//			tree.addChildren(proyectos);
+//			
+//			
+//			//PARTIDAS
+//			Node partidas = new BasicNode("Partidas Presupuestales", false, true);
+//				/*Node consultaPartidas = new BasicNode("Consulta de Partidas", "proyectos/partidas/consultas", "content-frame", true);
+//				partidas.addChild(consultaPartidas);
+//				Node aprobarPartidas = new BasicNode("Aprobación de Partidas", "proyectos/partidas/aprobar", "content-frame", true);
+//				partidas.addChild(aprobarPartidas);*/
+//			tree.addChildren(partidas);
+//			Node Anteproyectos = new BasicNode("Anteproyectos", false, true);
+//					Node cedulaBasica1 = new BasicNode("Captura de Cédula Básica", "proyectos/cedulabasica/capturarBorrador/", "content-frame", true);
+//					proyectos.addChild(cedulaBasica1);
+//					Node consultarCedula1 = new BasicNode("Partidas", "proyectos/partidas/aprobar", "content-frame", true);
+//					proyectos.addChild(consultarCedula1);
+//					Node AprobacionCedula1 = new BasicNode("Paquete Presupuestal", "proyectos/partidas/aprobar", "content-frame", true);
+//					proyectos.addChild(AprobacionCedula1);
+//			tree.addChildren(Anteproyectos);
+//			
+//			
+//			Map<String, Tree> response = new HashMap<String, Tree>();
+//			response.put("roo", tree);
+//			
+//			return response;
+//		}
+//	}
+
+	
+//	@RequestMapping(value="/usuarioDetalle",method=RequestMethod.GET)
+//	public ModelAndView loginDetalles(){
+//		Map<String, Object> respuesta = new HashMap<String, Object>();
+//		CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication();
+//		
+//		respuesta.put("usuario", ((Usuario) user.getDetails()).getEmpleados().getNombreCompleto());
+//		respuesta.put("area", ((Usuario) user.getDetails()).getEmpleados().getArea());
+//		respuesta.put("unidad", ((Usuario) user.getDetails()).getEmpleados().getPuesto());
+//		respuesta.put("correo", ((Usuario) user.getDetails()).getEmpleados().getCorreoElectronico());
+//		respuesta.put("dependencia", ((Usuario) user.getDetails()).getEmpleados().getArea());
+//		respuesta.put("puesto", ((Usuario) user.getDetails()).getEmpleados().getPuesto());
+//		respuesta.put("rol", ((Usuario) user.getDetails()).getRoleses());
+//		respuesta.put("username", ((Usuario) user.getDetails()).getNombre());
+//		
+//		return new ModelAndView("usuario/usuarioDetalle",respuesta);		
+//	}
+	
+	@RequestMapping(value="/ayuda",method=RequestMethod.GET)
+	public ModelAndView ayuda(){
+		return new ModelAndView("ayuda/index");
+	}
+}

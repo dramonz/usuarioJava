@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<querys id="consultas">
+<consulta_proyecto_cveUsuario>
+	select 
+     cve_proyecto, 
+     proyectos.id id_proyectos, 
+     num_proyecto,
+      nombre_proyecto,
+      estatus_proyecto,
+     proyectos_oficios.id as id_proyecto_oficio, 
+     oficio_solicitud, oficio_respuesta,
+      proyectos.cve_proyecto_oficio,
+     id_unidad,
+      concat(codigo_unidad,concat('-', nombre_unidad))as unidad,
+     dependencias.codigo_dependencia, 
+     dependencias.id id_dependencia,
+     concat(dependencias.codigo_dependencia,concat('-',nombre_dependencia)) as dependencia,
+     nombre_dependencia,
+       codigo_grupo
+from 
+   proyectos 
+    left join proyectos_oficios on  (proyectos.cve_proyecto_oficio = proyectos_oficios.cve_proyecto_oficio)
+    left join vw_unidades using (cve_unidad)
+    left join dependencias using (cve_dependencia)
+where 
+    proyectos.ACTIVO = 1
+    and proyectos.id not in (select id_proyecto from permisos_proyectos_usuario where cve_usuario = %d)
+</consulta_proyecto_cveUsuario>
+<consulta_proyecto_pertenece_cveUsuario>
+select 
+     cve_proyecto, 
+     proyectos.id id_proyectos, 
+     num_proyecto,
+      nombre_proyecto,
+      estatus_proyecto,
+     proyectos_oficios.id as id_proyecto_oficio, 
+     oficio_solicitud, oficio_respuesta,
+      proyectos.cve_proyecto_oficio,
+     id_unidad,
+      concat(codigo_unidad,concat('-', nombre_unidad))as unidad,
+     dependencias.codigo_dependencia, 
+     dependencias.id id_dependencia,
+     concat(dependencias.codigo_dependencia,concat('-',nombre_dependencia)) as dependencia,
+     nombre_dependencia,
+       codigo_grupo
+from 
+   proyectos 
+    left join proyectos_oficios on  (proyectos.cve_proyecto_oficio = proyectos_oficios.cve_proyecto_oficio)
+    left join vw_unidades using (cve_unidad)
+    left join dependencias using (cve_dependencia)
+where 
+    proyectos.ACTIVO = 1
+    and proyectos.id in (select id_proyecto from permisos_proyectos_usuario where cve_usuario = %d)
+</consulta_proyecto_pertenece_cveUsuario>
+<catalogo_dependencia>
+	 select 
+	 	id,
+	 	codigo_dependencia,
+	 	concat(codigo_dependencia,concat('-',nombre_dependencia)) as dependencia
+	  from dependencias 
+	  where cve_dependencia !=-1 
+	  and activo = 1 and ejercicio = %s
+</catalogo_dependencia>
+<consulta_unidades_cveUsuario>
+	select
+        cve_unidad,
+        id_unidad,
+        codigo_unidad,concat(
+        codigo_unidad, concat(' - ', nombre_unidad)) as nombre,
+        id_dependencia,
+        codigo_grupo,
+        concat(d.codigo_dependencia,concat('-',nombre_dependencia))
+        from
+        vw_unidades
+        left join dependencias d using
+        (cve_dependencia)
+        where vw_unidades.ejercicio = %s and id_unidad Not in (select id_unidad from permisos_unidades_usuario where cve_usuario=%d)        
+</consulta_unidades_cveUsuario>
+<consulta_unidades_pertenece_cveUsuario>
+	select
+        cve_unidad,
+        id_unidad,
+        codigo_unidad,concat(
+        codigo_unidad, concat(' - ', nombre_unidad)) as nombre,
+        id_dependencia,
+        codigo_grupo,
+        concat(d.codigo_dependencia,concat('-',nombre_dependencia))
+        from
+        vw_unidades
+        left join dependencias d using
+        (cve_dependencia)
+        where vw_unidades.ejercicio = %s and id_unidad in (select id_unidad from permisos_unidades_usuario where cve_usuario=%d)
+</consulta_unidades_pertenece_cveUsuario>
+<consultas_usuarios>
+select 
+    u.cve_usuario,
+    u.nombre_usuario,
+    u.contrasenia,
+    u.activo,
+    u.fecha_inicio_vigencia,
+    u.fecha_vencimiento_vigencia,
+    e.nombre_completo ,
+    u.cve_empleado
+    from usuarios u
+    left join empleados e on u.cve_empleado =e.cve_empleado
+</consultas_usuarios>
+<unidades>
+select
+		cve_unidad,
+		id_unidad,
+		codigo_unidad,concat(
+		codigo_unidad, concat(' - ', nombre_unidad)) as nombre,
+		id_dependencia,
+		codigo_grupo
+		from
+		vw_unidades
+		left join dependencias using
+		(cve_dependencia)
+		order by
+		nombre_unidad
+</unidades>
+<consulta_mapa_peticiones>
+	SELECT URL,ROL FROM MAPA_PETICIONES WHERE ROL!='IS_AUTHENTICATED_FULLY' AND ROL LIKE '%%%s%%'     
+</consulta_mapa_peticiones>
+<consulta_catalogo_peticiones>
+	select url from catalogos_peticiones where cve_cat_peticion = %d
+</consulta_catalogo_peticiones>
+<consulta_tree_permisos>
+	select cve_cat_peticion,url,cve_padre,modulo,descripcion from catalogos_peticiones  where activo=1
+</consulta_tree_permisos>
+<consulta_tree_by_cve_usuario>
+	select cve_cat_peticion,url,cve_padre,modulo,descripcion from catalogos_peticiones where url in (select url from mapa_peticiones where rol=(select rol from usuarios_roles where cve_usuario=(select cve_usuario from usuarios where activo=1 and cve_usuario=%d))) or cve_cat_peticion in(select distinct(cve_padre) from catalogos_peticiones where url in (select url from mapa_peticiones where rol=(select rol from usuarios_roles where cve_usuario=(select cve_usuario from usuarios where activo=1 and cve_usuario=%d)))) and activo =1
+</consulta_tree_by_cve_usuario>
+</querys>

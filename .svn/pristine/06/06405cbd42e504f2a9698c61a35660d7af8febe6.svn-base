@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     14/12/2011
+     ====================================================================== -->
+<project name="Usuarios" basedir="." >
+	
+	<property file="${basedir}/build.properties" />
+	<property name="web.app.name" value="${app.name}"/>
+	<property name="dist" value="${basedir}/dist" />
+
+	
+
+	<!-- ====================================================================== 
+          target: war             
+         ================================================================== -->
+	
+	<target name="crearWAR" description="Empaqueta la aplicación">
+		<echo>+-----------------------------------------------------------+</echo>
+		<echo>+         CREANDO ARCHIVO WAR DE LA APLICACION              +</echo>
+		<echo>+-----------------------------------------------------------+</echo>
+		<!--	    <war destfile="${dist}/${app.name}.war" webxml="WebContent/WEB-INF/web.xml" update="true">
+	          <classes dir="WebContent\WEB-INF\classes"/>
+	          	<fileset dir="${domain}">
+	          		<exclude name="web.xml"/>
+	          		<exclude name="lib/*.jar"/>
+	          </fileset>
+	    		
+		</war>-->
+		
+		
+		<war destfile="${dist}/${app.name}.war" webxml="WebContent/WEB-INF/web.xml"  update="true">
+			<classes dir="build\classes"/>
+		 	<fileset dir="WebContent">
+				<exclude name="WEB-INF/lib/*.jar"/>
+			</fileset>
+		  	
+			<!--<zipfileset dir="src/graphics/images/gifs"  prefix="images"/>-->
+		</war>
+		
+	</target>
+	
+	
+	 		<!--******************************************************************-->
+			  <!-- 							CLEAN									-->
+			  <!--******************************************************************-->
+
+			            <!--target name="clean">
+		                        <delete dir="dist"/>
+			            		<mkdir dir="dist"/>
+		                </target-->
+			
+	<!--<target name="clean" depends="clean-classes">
+							<delete dir="dist"/>
+						    <mkdir dir="dist"/>
+				    </target>
+				    <target name="clean-classes">
+				           <delete dir="${classes.dir}" />
+					       <mkdir dir="${classes.dir}"   />
+				    </target>-->
+		
+			      <!--******************************************************************-->
+				  <!-- 							BUILD									-->
+				  <!--******************************************************************-->
+			
+	<!--<target name="Build" description="build-all" >
+			      
+			      <path id="back.classpath">
+			            <fileset dir="${domain.libs}">
+			                  <include name="*.jar"/>
+			           	</fileset>
+			            
+			      </path>
+				</target>-->
+		
+				<!-- =================================
+	              target: compile-back
+	             ================================= -->
+	<!--     	<target name="compile-back" description="    description">
+	            <javac destdir="${classes.dir}"     debug="on" encoding="iso-8859-1" >
+	                  <src path="${src.dir}" />
+	                  <classpath refid="back.classpath" />
+	                  <include name="mx/gob/tabasco/saf/siafe/tesoreria/**/*.java"   />
+	            	  <include name="mx/gob/tabasco/saf/siafe/tesoreria/**/**/*.java"   />
+	            </javac>
+	      	
+		        <copy file="${src.dir}/hibernate.cfg.xml" todir="${classes.dir}" />
+	      		<copy file="${src.dir}/jdbc.properties" todir="${classes.dir}" />
+	      		<copy file="${src.dir}/messages.properties" todir="${classes.dir}" />
+	      		<copy file="${src.dir}/views.properties" todir="${classes.dir}" />
+	      		<copy file="${src.dir}/log4j.properties" todir="${classes.dir}" /> 
+		    		
+	      </target> -->
+	
+	
+	
+</project>

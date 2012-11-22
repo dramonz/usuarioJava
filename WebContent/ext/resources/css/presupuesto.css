@@ -1,0 +1,141 @@
+html, body {
+	width: 100%;
+	height: 100% !important;
+	background: #cecece !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	font-family: Verdana !important;
+	font-size: 12px !important;
+	min-height: 670px !important;
+	min-width: 965px !important;
+}
+
+body {
+	min-width: 965px !important;
+}
+
+.clear {
+	clear: both;
+}
+
+.container {
+	min-height: 100%;
+	height: 100%;
+	position: relative;
+}
+
+.content-body {
+	background: #ffffff;
+	margin: 0 auto;
+}
+
+.section-frame {
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.menu-tree .x-panel-header {
+	background: url('../images/panel-title-background.jpg') repeat-x;
+	border: none;
+}
+
+.menu-tree .x-panel-header .x-box-inner {
+	background: url('../images/menu-tree-icon.png') no-repeat;
+	height: 22px !important;
+}
+
+.menu-tree .x-panel-header-text {
+	color: #ffffff;
+	font-size: 18px;
+	font-weight: normal;
+	font-family: 'Myriad Pro';
+	padding-left: 25px;
+}
+
+.menu-tree .x-panel-body {
+	background: #ffefe2;
+}
+
+.x-tree-icon-leaf {
+	width: 13px;
+	background-image: url('../themes/images/custom/tree/leaf.png')
+}
+
+.x-tree-panel .x-grid-row .x-grid-cell-inner {
+	height: 18px;
+	line-height: 12px;
+	vertical-align: middle;
+	cursor: pointer;
+	font-size: 11px;
+	color: #242424;
+	font-family: verdana;
+}
+
+.x-tree-panel .x-grid-row .x-grid-cell-inner a {
+	color: #242424;
+}
+
+.x-grid-row-focused .x-grid-cell {
+	background: white !important;
+}
+
+.x-grid-row-over .x-grid-cell {
+	background: white !important;
+}
+
+/*
+ * Estilo del icono del nodo proyectos.
+ */
+.proyectos-tree-icon {
+	padding-top: 5px !important;
+	height: 16px !important;
+}
+
+.proyectos-tree-icon .x-grid-cell-inner{
+	font-size: 13px !important;
+	color: #242424;
+	line-height: 16px !important;
+}
+
+.proyectos-tree-icon .x-tree-icon-parent {
+	width: 22px !important;
+	background: url('../themes/images/custom/tree/proyectos-tree-icon.png') no-repeat;
+}
+
+/*
+ * Estilo del icono del nodo partidas.
+  */
+ .partidas-tree-icon {
+	height: 16px !important;
+}
+
+.partidas-tree-icon .x-grid-cell-inner{
+	font-size: 13px !important;
+	color: #242424;
+	line-height: 16px !important;
+}
+
+.partidas-tree-icon .x-tree-icon-parent {
+	width: 22px !important;
+	background: url('../themes/images/custom/tree/partidas-tree-icon.png') no-repeat;
+}
+
+/*
+ * Estilo del icono del nodo catalogos
+ */
+.catalogos-tree-icon {
+	height: 16px !important;
+}
+
+.catalogos-tree-icon .x-grid-cell-inner{
+	font-size: 13px !important;
+	color: #242424;
+	line-height: 16px !important;
+}
+
+.catalogos-tree-icon .x-tree-icon-parent {
+	margin-left: 4px;
+	width: 18px !important;
+	background: url('../themes/images/custom/tree/catalogos-tree-icon.png') no-repeat;
+}

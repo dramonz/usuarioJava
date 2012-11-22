@@ -1,0 +1,721 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.controladores;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.CustomUserDetails;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Usuarios;
+import mx.gob.tabasco.saf.siafe.presupuesto.controladores.F2B.UsuarioF2B;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.EmpleadoServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.MapaPeticionesServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.PermisoProyectoUsuarioServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.PermisoUnidadUsuarioServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.RolServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.TreeServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.UsuarioServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.UsuarioSessionService;
+import mx.gob.tabasco.saf.siafe.presupuesto.utilerias.ConsultasUtileria;
+import mx.gob.tabasco.saf.siafe.presupuesto.utilerias.TextoUtilerias;
+import mx.gob.tabasco.saf.siafe.presupuesto.utilerias.consultasutileria.entidades.ConsultaSQLNativo;
+
+import org.apache.log4j.Logger;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+@Controller
+@RequestMapping("/usuarios")
+public class UsuariosControlador {
+
+	protected final Logger log = Logger.getLogger(this.getClass());
+
+	@Resource
+	private PermisoUnidadUsuarioServicio permisoUnidad;
+	
+	@Resource
+	private UsuarioSessionService usuarioSession;
+	
+	@Resource
+	ConsultasUtileria consultas;
+
+	@Resource
+	EmpleadoServicio empleadoServicio;
+
+	@Resource
+	RolServicio rolServicio;
+
+	@Resource
+	UsuarioServicio usuarioServicio;
+
+	@Resource
+	MapaPeticionesServicio mapaPeticionesServicio;
+
+	@Resource
+	TreeServicio treeServicio;
+	
+	@Resource
+	private PermisoUnidadUsuarioServicio permisoUnidadUsuarioServicio;
+	
+	@Resource
+	private PermisoProyectoUsuarioServicio permisoProyectoUsuarioServicio;
+	
+	
+	@RequestMapping(value = "/agregarempleado", method = RequestMethod.GET)
+	public ModelAndView agregarEmpleado() {
+		return new ModelAndView("usuario/agregarempleado");
+	}
+
+	@RequestMapping(value = "/cambiarcontrasenia", method = RequestMethod.GET)
+	public ModelAndView cambiarContrasenia() {
+		return new ModelAndView("usuario/recuperarContrasenia");
+	}
+
+	@RequestMapping(value = "/cambiarcontrasenia/guardar", method = RequestMethod.POST)
+	public @ResponseBody
+	HashMap<String, Object> guardarCambioContrasenia(
+			@RequestParam("contraseniaAnterior") String contraseniaAnterior,
+			@RequestParam("contraseniaNueva") String contraseniaNueva,
+			@RequestParam("confirmarContrasenia") String confirmarContrasenia) {
+		boolean result = true;
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		CustomUserDetails user = (CustomUserDetails) SecurityContextHolder
+				.getContext().getAuthentication();
+		String usuario = ((Usuarios) user.getDetails()).getNombreUsuario();
+		result = usuarioServicio.restaurarContrasenia(usuario,
+				contraseniaAnterior, contraseniaNueva, confirmarContrasenia);
+		response.put("success", result);
+		return response;
+	}
+
+	@RequestMapping(value = "/agregarempleado", method = RequestMethod.POST)
+	@ResponseBody
+	public HashMap<String, Object> agregarEmpleado(
+			@RequestParam String nombre,
+			@RequestParam String apellidos, 
+			@RequestParam Long area,
+			@RequestParam Long puesto,
+			@RequestParam(value = "email",required = false) String correoElectronico,
+			@RequestParam Long unidad,
+			@RequestParam Long cveJefe,
+			@RequestParam(value = "activo",required = false,defaultValue = "0") Integer activo) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		
+		try {
+			empleadoServicio.agregarEmpleado(nombre, apellidos, area,
+					puesto, correoElectronico, unidad, cveJefe, activo);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("msg", e.getMessage());
+			this.log.error("Error al agregar un empleado", e);
+		}
+		
+		return response;
+	}
+
+	@RequestMapping(value = "/editarempleado", method = RequestMethod.GET)
+	public ModelAndView editarEmpleado() {
+		return new ModelAndView("usuario/editarEmpleado");
+	}
+
+	@RequestMapping(value = "/busquedaUsuario", method = RequestMethod.GET)
+	public ModelAndView busquedaUsuario() {
+		return new ModelAndView("usuario/busquedaUsuario");
+	}
+
+	@RequestMapping(value = "/buscarUsuario", method = RequestMethod.GET)
+	public @ResponseBody
+	HashMap<String, Object> buscar(
+//			@RequestParam("Busqueda") int tipoBusqueda,
+			@RequestParam("idDependencia") Long idDependencia) {
+		HashMap<String, Object> respuesta = new HashMap<String, Object>();
+		respuesta.put("success", true);
+
+		try {
+//			if (tipoBusqueda == 1) {
+				if(idDependencia!=null){
+					respuesta.put("data",usuarioServicio.findByIdDependencia(idDependencia));
+				}else{
+					respuesta.put("data", this.usuarioServicio.listAllByPermisoUnidad());
+				}
+//			}
+		} catch (Exception e) {
+			this.log.error("Ocurrió un error al realizar la búsqueda", e);
+			respuesta.put("success", false);
+			respuesta.put("msg", "Ocurrió un error al realizar la búsqueda");
+		}
+
+		return respuesta;
+	}
+
+	@RequestMapping(value = "/listarDependencias", method = RequestMethod.GET)
+	public ModelAndView listarDependencias() {
+		return new ModelAndView("usuario/listarDependencias");
+	}
+
+	@RequestMapping(value = "editarempleado", method = RequestMethod.POST)
+	@ResponseBody
+	public HashMap<String, Object> editarEmpleado(
+			@RequestParam("nombreEditar") String nombre,
+			@RequestParam Long area, 
+			@RequestParam Long puesto,
+			@RequestParam("email") String correoElectronico,
+			@RequestParam Long unidad, 
+			@RequestParam Long cve,
+//			@RequestParam (value = "jefe", required = false)Long jefe,
+			@RequestParam (value = "jefe", required = false) Long cveJefe,
+			@RequestParam(defaultValue = "0") Integer activo) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		
+		try {
+			empleadoServicio.editarEmpleado(nombre, area, puesto,
+					correoElectronico, unidad, cve, cveJefe, activo);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("msg", e.getMessage());
+			this.log.error("Error al actualizar un empleado", e);
+		}
+		
+		return response;
+	}
+
+	@RequestMapping(value = "/agregarrol", method = RequestMethod.GET)
+	public ModelAndView agregarRol() {
+		return new ModelAndView("usuario/agregarrol");
+	}
+
+	@RequestMapping(value = "/editarrol", method = RequestMethod.GET)
+	public ModelAndView editarRol() {
+		return new ModelAndView("usuario/editarRol");
+	}
+
+	@RequestMapping(value = "/agregarrol", method = RequestMethod.POST)
+	@ResponseBody
+	public HashMap<String, Object> agregarRol(
+			@RequestParam String nombre,
+			@RequestParam String descripcion,
+			@RequestParam(defaultValue = "0") Integer activo,
+			@RequestParam(value = "cveModulo",required = false) Long[] cveModulo) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", false);
+		response.put("existe", false);
+		try {
+			if(this.rolServicio.getByRol(nombre) == null){
+				rolServicio.agregarRol(nombre, descripcion, activo,cveModulo);
+				response.put("msg", "El Rol se ha registrado con exito, ¿Desea agregrar mas roles?");
+			}else{
+				response.put("existe", true);
+				response.put("msg", "El rol que intenta agregar ya existe en la base de datos");
+			}			
+			response.put("success", true);
+		} catch (DataIntegrityViolationException e) {
+			response.put("msg", "El rol que intenta agregar ya existe en la base de datos");
+			this.log.error("Error al insertar rol", e);
+		} catch (Exception e) {
+			response.put("msg", e.getMessage());
+			this.log.error("Error inesperado al insertar rol", e);
+		}
+		
+		return response;
+	}
+
+	@RequestMapping(value = "/editarrol", method = RequestMethod.POST)
+	@ResponseBody
+	public HashMap<String, Object> editarRol(
+			@RequestParam String nombre,
+			@RequestParam String descripcion,
+			@RequestParam(defaultValue = "0") Integer activo,
+			@RequestParam(value = "cveModulo",required = false) Long[] cveModulo) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		
+		try {
+			rolServicio.editarRol(nombre, descripcion, activo,cveModulo);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("msg", e.getMessage());
+		}
+		
+		return response;
+	}
+
+	@RequestMapping(value = "/permisosroles", method = RequestMethod.GET)
+	public ModelAndView permisosRoles() {
+		return new ModelAndView("usuario/permisosRoles");
+	}
+
+	@RequestMapping(value = "/permisosroles/consulta", method = RequestMethod.GET)
+	@ResponseBody
+	public HashMap<String, Object> permisoRolesConsulta(@RequestParam("rol") String rol) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		
+		try {
+			response.put("data", this.mapaPeticionesServicio.getByRol(rol));
+		} catch (Exception e) {
+			response.put("success", false);
+			this.log.error("Ocurrió un error al obtener las urls a partir del rol ", e);
+		}
+		
+		return response;
+	}
+
+	@RequestMapping(value = "permisosroles/agregar", method = RequestMethod.POST)
+	@ResponseBody
+	public HashMap<String, Object> permisoRolesAgregal(
+			@RequestParam("rol") String rol,
+			@RequestParam("cveCatPeticion") Long[] cveCatPeticion) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		
+		try {
+			mapaPeticionesServicio.agregarPermisosRol(rol, cveCatPeticion);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("msg", e.getMessage());
+			this.log.error("Error al insertar el registro en mapa peticion", e);
+		}
+		
+		return response;
+	}
+
+	@RequestMapping(value = "permisosroles/eliminar", method = RequestMethod.POST)
+	@ResponseBody
+	public HashMap<String, Object> permisoRolesAgregal(
+			@RequestParam("ruta") String url, 
+			@RequestParam String rol) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		
+		try {
+			mapaPeticionesServicio.eliminarPermisosRol(url, rol);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("msg", e.getMessage());
+			this.log.error("Error al eliminar permiso", e);
+		}
+		
+		return response;
+
+	}
+
+	@RequestMapping(value = "/agregarusuario", method = RequestMethod.GET)
+	public ModelAndView agregarUsuario() {
+		return new ModelAndView("usuario/agregarusuario");
+	}
+
+	@RequestMapping(value = "/editarusuario", method = RequestMethod.GET)
+	public ModelAndView editarUsuario() {
+		return new ModelAndView("usuario/editarUsuario");
+	}
+
+	@RequestMapping(value = "/editarusuario/consulta", method = RequestMethod.GET)
+	public @ResponseBody
+	HashMap<String, Object> consultaEditarUsuario(
+			@RequestParam(value= "empleado",required = false)String empleado,
+			@RequestParam(value = "usuario",required = false)String usuario,
+			@RequestParam(value = "cveEmpleado",required = false) Long cveEmpleado
+			) {
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		response.put("success", true);
+		response.put("data", this.usuarioServicio.editarConsulta(TextoUtilerias.convertStringUT(empleado),TextoUtilerias.convertStringUT(usuario),cveEmpleado));
+		return response;
+	}
+
+	@RequestMapping(value = "/editarusuario", method = RequestMethod.POST)
+	public @ResponseBody
+	HashMap<String, Object> editarUsuarios(
+			@RequestParam("nombre") String nombre,
+			@RequestParam("contrasenia") String contrasenia,
+			@RequestParam("fechaInicio") Long fechaInicio,
+			@RequestParam("fechaVencimiento") Long fechaVencimiento,
+			@RequestParam("activo") boolean activo,
+			@RequestParam("nombreEmpleado") Long nombreEmpleado,
+			@RequestParam("cve") Long cve) {
+
+		boolean result = true;
+		boolean value = false;
+		HashMap<String, Object> response = new HashMap<String, Object>();
+
+		ConsultaSQLNativo query = new ConsultaSQLNativo();
+		query.setSqlNativo(
+				"select nombre_usuario from usuarios where nombre_usuario='"
+						+ nombre + "' and cve_usuario !=" + cve + " ")
+				.setColumnas("nombre_usuario");
+		int existe = consultas.gestor.consultar(query).getResult().size();
+		if (existe == 0) {
+			result = usuarioServicio.editarUsuario(nombre, contrasenia,
+					fechaInicio, fechaVencimiento, activo, nombreEmpleado,
+					cve);
+		} else {
+			value = true;
+		}
+
+		response.put("success", result);
+		response.put("existe", value);
+		return response;
+
+	}
+
+	@RequestMapping(value = "/agregarusuario", method = RequestMethod.POST)
+	public @ResponseBody
+	HashMap<String, Object> agregarUsuario(
+			@RequestParam("nombre") String nombre,
+			@RequestParam("contrasenia") String contrasenia,
+			@RequestParam("contrasenia2") String contrasenia2,
+			@RequestParam("fechaInicio") Long fechaInicio,
+			@RequestParam("fechaVencimiento") Long fechaVencimiento,
+			@RequestParam("activo") boolean activo,
+			@RequestParam("nombreEmpleado") Long nombreEmpleado) {
+
+		boolean result = true;
+		boolean value = false;
+		HashMap<String, Object> response = new HashMap<String, Object>();
+
+//		ConsultaSQLNativo query = new ConsultaSQLNativo();
+//		query.setSqlNativo(
+//				"select nombre_usuario from usuarios where nombre_usuario='"
+//						+ nombre + "'").setColumnas("nombre_usuario");
+//		int existe = consultas.gestor.consultar(query).getResult().size();
+		if (!usuarioServicio.existeUsuario(nombre)) {
+			result = usuarioServicio.agregarUsuario(nombre, contrasenia,
+					contrasenia2, fechaInicio, fechaVencimiento, activo,
+					nombreEmpleado);
+		} else {
+			value = true;
+		}
+
+		response.put("success", result);
+		response.put("existe", value);
+		return response;
+
+	}
+
+	@RequestMapping(value = "/permisosMenu", method = RequestMethod.GET)
+	public @ResponseBody
+	HashMap<String, Object> permisosMenu() {
+		HashMap<String, Object> respuesta = new HashMap<String, Object>();
+
+		try {
+			respuesta.put("children", treeServicio.getNodosModulos());
+		} catch (Exception e) {
+			respuesta.put("children", null);
+			this.log.error("Ocurrió un error al obtener el arbol de urls", e);
+		}
+
+		return respuesta;
+	}
+
+	@RequestMapping(value = "/activarUsuarios", method = RequestMethod.POST)
+	public @ResponseBody
+	HashMap<String, Object> actulizarUsuarios(
+			@RequestBody Map<String, List<Map<String, Object>>> usuarios) {
+		HashMap<String, Object> respuesta = new HashMap<String, Object>();
+		respuesta.put("succes", true);
+		try {
+			List<Map<String, Object>> activo = usuarios.get("activos");
+			List<UsuarioF2B> usuariosF2B = new ArrayList<UsuarioF2B>();
+			for (Map<String, Object> mapa : activo) {
+				UsuarioF2B user = new UsuarioF2B();
+				user.setCve(Long.valueOf(mapa.get("cve").toString()));
+				user.setNombreUsuario(mapa.get("nombreUsuario").toString());
+				user.setActivo(1);
+				user.setNombreCompleto(mapa.get("nombreCompleto").toString());
+				usuariosF2B.add(user);
+			}
+			usuarioServicio.activarUsuarios(usuariosF2B);
+
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			this.log.error("Ocurrió un error al actualizar los usuarios", e);
+		}
+
+		return respuesta;
+	}
+	@RequestMapping(value = "/desactivarUsuarios", method = RequestMethod.POST)
+	public @ResponseBody
+	HashMap<String, Object> desactivarUsuarios(
+			@RequestBody Map<String, List<Map<String, Object>>> usuarios) {
+		HashMap<String, Object> respuesta = new HashMap<String, Object>();
+		respuesta.put("succes", true);
+		try {
+			List<Map<String, Object>> inactivo = usuarios.get("inactivos");
+			List<UsuarioF2B> usuariosF2B = new ArrayList<UsuarioF2B>();
+			for (Map<String, Object> mapa : inactivo) {
+				UsuarioF2B user = new UsuarioF2B();
+				user.setCve(Long.valueOf(mapa.get("cve").toString()));
+				user.setNombreUsuario(mapa.get("nombreUsuario").toString());
+				user.setActivo(0);
+				user.setNombreCompleto(mapa.get("nombreCompleto").toString());
+				usuariosF2B.add(user);
+			}
+			usuarioServicio.desactivarUsuarios(usuariosF2B);
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			this.log.error("Ocurrió un error al actualizar los usuarios", e);
+		}
+
+		return respuesta;
+	}
+	/***
+	 * ASIGNACION DE UNIDADES A USUARIO
+	 *
+	 */
+
+	@RequestMapping(value = "/agregarunidad", method = RequestMethod.GET)
+	public ModelAndView agregarunidad() {
+		return new ModelAndView("usuario/agregarUnidad");
+	}
+	
+	@RequestMapping(value = "/editarunidad", method = RequestMethod.GET)
+	public ModelAndView editarunidad() {
+		return new ModelAndView("usuario/editarUnidad");
+	}
+	
+	
+	@RequestMapping(value = "/eliminarUnidades", method = RequestMethod.POST)
+	public @ResponseBody HashMap<String, Object> eliminarUnidades(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam("idUnidad") Long[] idUnidad
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try{			
+			permisoUnidadUsuarioServicio.deletePermisoUnidad(cveUsuario, idUnidad);
+			response.put("success",true);
+		}catch(Exception e){
+			log.error("Error al eliminarrUnidad-UsuariosControlador: ",e);
+			response.put("success",false);
+		}
+		
+		return response;
+	}
+	
+	/**
+	 *Filtra por cveUsuario adquiriendo las unidades asignadas al usuario
+	 *@param 
+	 **/
+	@RequestMapping(value = "/consulta/consultaUnidadesPerteneceCveUsuario", method = RequestMethod.GET)
+	public @ResponseBody HashMap<String, Object> consultaUnidadesPerteneceCveUsuario(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam ("idUnidad")	String idUnidad,
+			@RequestParam ("idDependencia") String idDependencia,
+			@RequestParam("ejercicio") Long ejercicio
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try {
+			ConsultaSQLNativo query = new ConsultaSQLNativo();
+			query.setSqlNativo( consultas.sql.presupuesto.usuarios.getConsultaUnidadesPerteneceCveUsuario(cveUsuario,idUnidad,idDependencia,this.permisoUnidad.listIdUnidadPermiso(),this.usuarioSession.isRol("ROLE_ADMIN"),ejercicio))
+					.setColumnas("cveUnidad,idUnidad,codigoUnidad,nombre,idDependencia,codigoGrupo,dependencia");
+			response.put("success",true);
+			response.put("data", consultas.gestor.consultar(query).getHasMapResult());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Erroe en UsuariosControlador-consultaUnidadesPerteneceCveUsuario: ",e);
+		}
+		return response;
+	}
+	
+	
+	
+	@RequestMapping(value = "/agregarUnidades", method = RequestMethod.POST)
+	public @ResponseBody HashMap<String, Object> agregarUnidades(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam("idUnidad") Long[] idUnidad
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try{			
+			permisoUnidadUsuarioServicio.insertPermisoUnidad(cveUsuario, idUnidad);
+
+			response.put("success",true);
+		}catch(Exception e){
+			log.error("Error al agregarUnidad-UsuariosControlador: ",e);
+			response.put("success",false);
+		}
+		
+		return response;
+	}
+	/**
+	 *Filtra por cveUsuario omitiendo las unidades que se le han asignado al usuario
+	 *@param 
+	 **/
+	@RequestMapping(value = "/consulta/unidadesOmitidasPorUsuario", method = RequestMethod.GET)
+	public @ResponseBody HashMap<String, Object> catalogoUsuarios(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam ("idUnidad")	String idUnidad,
+			@RequestParam ("idDependencia") String idDependencia,
+			@RequestParam ("ejercicio") Long ejercicio
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try {
+			ConsultaSQLNativo query = new ConsultaSQLNativo();
+			query.setSqlNativo( consultas.sql.presupuesto.usuarios.getConsultaUnidadesCveUsuario(cveUsuario,idUnidad,idDependencia,this.permisoUnidad.listIdUnidadPermiso(),this.usuarioSession.isRol("ROLE_ADMIN"),ejercicio))
+					.setColumnas("cveUnidad,idUnidad,codigoUnidad,nombre,idDependencia,codigoGrupo,dependencia");
+			response.put("success",true);
+			response.put("data", consultas.gestor.consultar(query).getHasMapResult());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en UsuariosCOntrolador-catalogoUsuarios",e);
+			response.put("success", false);
+		}
+		return response;
+	}
+	
+	
+	
+	@RequestMapping(value = "/listaunidades", method = RequestMethod.GET)
+	public @ResponseBody HashMap<String, Object> listaUnidades(){
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		try {
+			ConsultaSQLNativo query = new ConsultaSQLNativo();
+			query.setSqlNativo( consultas.sql.presupuesto.usuarios.getSqlListaUnidades())
+				.setColumnas(
+							"cve_unidad, id, codigo, nombre, id_dependencia, codigo_grupo");
+			response.put("success", true);
+			response.put("data", consultas.gestor.consultar(query).getHasMapResult());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en UsuariosCOntrolador-listaUnidades",e);
+			response.put("success",false);
+		}
+		return response;
+	}
+	
+	@RequestMapping(value = "/catalogo/dependencia", method = RequestMethod.GET)
+	public @ResponseBody HashMap<String, Object> catalogoDependencia(@RequestParam(value = "ejercicio",required = false) Long ejercicio){
+		HashMap<String, Object> response = new HashMap<String, Object>();
+		try {
+			ConsultaSQLNativo query = new ConsultaSQLNativo();
+			query.setSqlNativo( consultas.sql.presupuesto.usuarios.getSqlCatalogoDependencia(this.permisoUnidad.listIdUnidadPermiso(),this.usuarioSession.isRol("ROLE_ADMIN"),ejercicio))
+				.setColumnas(
+							"id,codigo,nombre");
+			response.put("success", true);
+			response.put("data", consultas.gestor.consultar(query).getHasMapResult());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en UsuariosCOntrolador-catalogoDependencia",e);
+			response.put("success",false);
+		}
+		return response;
+	}
+	
+	/**
+	 * ASIGNACION DE LOS PROYECTOS QUE EL USUARIO NO PODRA VER
+	 */
+	@RequestMapping(value = "/editarProyecto", method = RequestMethod.GET)
+	public ModelAndView editarProyecto() {
+		return new ModelAndView("usuario/editarProyecto");
+	}
+	
+	@RequestMapping(value = "/agregarProyectos", method = RequestMethod.POST)
+	public @ResponseBody HashMap<String, Object> agregarProyectos(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam("idProyecto") Long[] idProyecto
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try{			
+			permisoProyectoUsuarioServicio.insertPermisoProyecto(cveUsuario, idProyecto);
+			response.put("success",true);
+		}catch(Exception e){
+			log.error("Error al agregarProyecto-UsuariosControlador: ",e);
+			response.put("success",false);
+		}
+		
+		return response;
+	}
+	
+	@RequestMapping(value = "/agregarProyecto", method = RequestMethod.GET)
+	public ModelAndView agregarProyecto() {
+		return new ModelAndView("usuario/agregarProyecto");
+	}
+	
+	@RequestMapping(value = "/eliminarProyectos", method = RequestMethod.POST)
+	public @ResponseBody HashMap<String, Object> eliminarProyectos(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam("idProyecto") Long[] idProyecto
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try{			
+			permisoProyectoUsuarioServicio.deletePermisoProyecto(cveUsuario, idProyecto);
+			
+			response.put("success",true);
+		}catch(Exception e){
+			log.error("Error al eliminarProyecto-UsuariosControlador: ",e);
+			response.put("success",false);
+		}
+		
+		return response;
+	}
+	
+	/**
+	 *Filtra por cveUsuario omitiendo las proyectos que se le han asignado al usuario
+	 *@param 
+	 **/
+	@RequestMapping(value = "/consulta/consultaProyectoPerteneceCveUsuario", method = RequestMethod.GET)
+	public @ResponseBody HashMap<String, Object> consultaProyectoPerteneceCveUsuario(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam ("ejercicio") String ejercicio,
+			@RequestParam ("proyecto")String proyecto,
+			@RequestParam ("oficioSolicitud") String oficioSolicitud,
+			@RequestParam ("estatus") String estatus,
+			@RequestParam ("idUnidad") String idUnidad,
+			@RequestParam ("idDependencia") String idDependencia
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try {
+			ConsultaSQLNativo query = new ConsultaSQLNativo();
+			query.setSqlNativo( consultas.sql.presupuesto.usuarios.getConsultaProyectoPerteneceCveUsuario(cveUsuario,ejercicio,proyecto,oficioSolicitud,estatus,idUnidad,idDependencia,this.permisoUnidad.listIdUnidadPermiso(),this.usuarioSession.isRol("ROLE_ADMIN"),this.permisoProyectoUsuarioServicio.listIdProyectosNoPermitidos()))
+					.setColumnas("cveProyecto,idProyecto,numProyecto," +
+							"nombreProyecto,estatus,idProyectoOficio," +
+							"oficioSolicitud,oficioRespuesta,cveProyectoOficio,idUnidad,nombreUnidad," +
+							"codigoDependencia,idDependencia,nombreDependencia,codigoGrupo");
+			response.put("success",true);
+			response.put("data", consultas.gestor.consultar(query).getHasMapResult());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en el controlador UsuariosControlador-consultaProyectoCveUsuario: ",e);
+			response.put("success",false);
+		}
+		return response;
+	}
+	/**
+	 *Filtra por cveUsuario omitiendo las proyectos que se le han asignado al usuario
+	 *@param 
+	 **/
+	@RequestMapping(value = "/consulta/consultaProyectoCveUsuario", method = RequestMethod.GET)
+	public @ResponseBody HashMap<String, Object> consultaProyectoCveUsuario(
+			@RequestParam ("cveUsuario") Long cveUsuario,
+			@RequestParam ("ejercicio") String ejercicio,
+			@RequestParam ("proyecto")String proyecto,
+			@RequestParam ("oficioSolicitud") String oficioSolicitud,
+			@RequestParam ("estatus") String estatus,
+			@RequestParam ("idUnidad") String idUnidad,
+			@RequestParam ("idDependencia") String idDependencia
+		){
+		HashMap<String, Object> response = new HashMap<String, Object>();		
+		try {
+			ConsultaSQLNativo query = new ConsultaSQLNativo();
+			query.setSqlNativo( consultas.sql.presupuesto.usuarios.getConsultaProyectoCveUsuario(cveUsuario,ejercicio,proyecto,oficioSolicitud,estatus,idUnidad,idDependencia,this.permisoUnidad.listIdUnidadPermiso(),this.usuarioSession.isRol("ROLE_ADMIN"),this.permisoProyectoUsuarioServicio.listIdProyectosNoPermitidos()))
+					.setColumnas("cveProyecto,idProyecto,numProyecto," +
+							"nombreProyecto,estatus,idProyectoOficio," +
+							"oficioSolicitud,oficioRespuesta,cveProyectoOficio,idUnidad,nombreUnidad," +
+							"codigoDependencia,idDependencia,nombreDependencia,codigoGrupo");
+			response.put("success",true);
+			response.put("data", consultas.gestor.consultar(query).getHasMapResult());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			log.error("Error en UsuariosControlador-consultaProyectoCveUsuario: ",e);
+		}
+		return response;
+	}
+}

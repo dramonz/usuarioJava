@@ -1,0 +1,184 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.servicios;
+
+import java.util.List;
+import java.util.Date;
+
+import javax.annotation.Resource;
+
+import mx.gob.tabasco.saf.siafe.presupuesto.controladores.F2B.EmpleadoF2B;
+import mx.gob.tabasco.saf.siafe.presupuesto.controladores.helper.EmpleadoHelper;
+import mx.gob.tabasco.saf.siafe.presupuesto.dao.IEmpleadoDAO;
+import mx.gob.tabasco.saf.siafe.presupuesto.utilerias.FechaUtils;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Areas;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Empleados;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Puestos;
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Unidades;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class EmpleadoServicio implements IBaseService<Empleados, Long>{
+
+	@Resource
+	private UsuarioSessionService usuarioSesionServicio;
+	
+	@Resource
+	private UnidadServicio unidadServicio;
+	
+	@Resource
+	private IEmpleadoDAO dao;
+	
+	@Resource
+	private AreaServicio areaServicio;
+	
+	@Resource
+	private PuestoServicio puestoServicio; 
+	
+	@Resource
+	private ControlConsecutivosServicio controlConsecutivoServicio;
+	
+	@Resource
+	private PermisoUnidadUsuarioServicio permisoUnidad;
+	
+	@Transactional(readOnly = true)
+	public List<EmpleadoF2B> getEmpleados(String empleado,Long cveJefe) {
+		return EmpleadoHelper.convertListModelToListF2B(this.dao.listaByIdUnidadesPermitidas(this.permisoUnidad.listIdUnidadPermiso(),empleado,cveJefe));
+	}
+	
+	@Override
+	public Empleados getActiveById(Class<Empleados> entity, Long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void delete(Empleados entity) {
+		this.dao.delete(entity);
+		
+	}
+
+	@Override
+	public void deleteHistorico(Empleados entity) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<Empleados> listAll(Class<Empleados> entity) {
+		return this.dao.listAll(entity);
+	}
+
+	@Override
+	public List<Empleados> listAll(Class<Empleados> entity, Long id) {
+		return this.dao.listAll(entity, id);
+	}
+	
+	public List<Empleados> findAll(Class<Empleados> entity) {
+		return this.dao.findAll(entity);
+	}
+
+	@Override
+	public List<Empleados> listByPage(Class<Empleados> entity, int from, int limit) {
+		return this.dao.listByPage(entity, from, limit);
+	}
+
+	@Override
+	public Empleados getByCve(Class<Empleados> entity, Long cve) {
+		return this.dao.getByCve(entity, cve);
+	}
+
+	@Override
+	public void insert(Empleados entity) {
+		entity.setCve(this.dao.findNextCve(Empleados.class));
+		entity.setCveUsuario(getCveUsuario());
+		entity.setFechaRegistro(FechaUtils.convertDatetoLong(new Date()));
+		entity.setHoraRegistro(FechaUtils.convertTimetoLong(new Date()));
+		entity.setId(this.findNextId());
+		this.dao.insert(entity);
+	}
+
+	@Override
+	public void insertHistorico(Empleados entity) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void update(Empleados entity) {
+		this.dao.update(entity);
+	}
+
+	@Override
+	public void updateHistorico(Empleados entity) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Long countActiveRecords(Class<Empleados> entity) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Long findNextCve() {
+		return controlConsecutivoServicio.obtieneCVE("Empleados");
+	}
+
+	@Override
+	public Long findNextId() {
+		// TODO Auto-generated method stub
+		return this.dao.findNextId(Empleados.class);
+	}
+
+	@Override
+	public Long getCveUsuario() {
+		// TODO Auto-generated method stub
+		return usuarioSesionServicio.getCveUsuario();
+	}
+	
+	@Transactional
+	public void agregarEmpleado(String nombre, String apellidos, Long cveArea, 
+			Long cvePuesto, String correoElectronico, Long unidad, Long cveJefe, Integer activo) {
+		Empleados empleado = new Empleados();
+		Areas idArea = areaServicio.getByCve(Areas.class, cveArea);
+		Puestos idPuesto = puestoServicio.getByCve(Puestos.class, cvePuesto);
+		Unidades idUnidad = unidadServicio.getActiveById(Unidades.class, unidad);
+		String nombreCompleto= nombre + " " + apellidos;
+		
+		empleado.setNombreCompleto(nombreCompleto);
+		empleado.setAreas(idArea);
+		empleado.setCorreoElectronico(correoElectronico);
+		empleado.setPuestos(idPuesto);
+		empleado.setUnidades(idUnidad);
+		empleado.setActivo(activo);
+		empleado.setCveEmpleadoJefe(cveJefe);
+		
+		insert(empleado);
+	}
+
+	@Transactional
+	public void editarEmpleado(String nombre, Long cveArea, Long cvePuesto,
+			String correoElectronico, Long unidad, Long cve, Long cveJefe, Integer activo) {
+		Empleados empleado = this.getByCve(Empleados.class, cve);
+		Areas idArea = areaServicio.getByCve(Areas.class, cveArea);
+		Puestos idPuesto = puestoServicio.getByCve(Puestos.class, cvePuesto);
+		Unidades idUnidad = unidadServicio.getActiveById(Unidades.class, unidad);
+		empleado.setAreas(idArea);
+		empleado.setCorreoElectronico(correoElectronico);
+		empleado.setNombreCompleto(nombre);
+		empleado.setPuestos(idPuesto);
+		empleado.setUnidades(idUnidad);
+		if (cveJefe !=null)
+		empleado.setCveEmpleadoJefe(cveJefe);
+		else empleado.setCveEmpleadoJefe(null);
+		empleado.setActivo(activo);
+		empleado.setCveUsuario(getCveUsuario());
+		empleado.setFechaRegistro(FechaUtils.convertDatetoLong(new Date()));
+		empleado.setHoraRegistro(FechaUtils.convertTimetoLong(new Date()));
+		
+		this.update(empleado);
+	}
+
+}

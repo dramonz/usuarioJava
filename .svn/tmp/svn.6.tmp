@@ -1,0 +1,151 @@
+package mx.gob.tabasco.saf.siafe.presupuesto.controladores;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import mx.gob.tabasco.saf.siafe.mapeo.modelo.Roles;
+import mx.gob.tabasco.saf.siafe.presupuesto.controladores.helper.RolHelper;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.PermisoRolServicio;
+import mx.gob.tabasco.saf.siafe.presupuesto.servicios.RolServicio;
+
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+/**
+ * 
+ * @author José Luis Landero
+ *
+ */
+@Controller
+@RequestMapping("/roles")
+public class RolUsuarioControlador {
+
+	private final Logger log = Logger.getLogger(this.getClass());
+	
+	@Resource
+	private PermisoRolServicio permisoRolServicio;
+	
+	@Resource
+	private RolServicio rolServicio;
+	
+	/**
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/asignar-rol", method = RequestMethod.GET)
+	public String showAsignarRolView() {
+		return "rolUsuario/asignar-rol";
+	}
+	
+	/**
+	 * 
+	 * @param nombreRol
+	 * @return
+	 */
+	@RequestMapping(value = "/buscar-rol", method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, Object> getUsuarios(@RequestParam String nombreRol) {
+		Map<String, Object> respuesta = new HashMap<String, Object>();
+		respuesta.put("success", true);
+		
+		try {
+			respuesta.put("data", 
+					this.rolServicio.findByNombreRol(nombreRol));
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			respuesta.put("msg", e.getMessage());
+			respuesta.put("data", RolHelper
+				     .convertListModelToListF2B(this.rolServicio
+				       .findAll(Roles.class)));
+			this.log.error("Error al buscar usuarios por nombre de usuario", e);
+		}
+		
+		return respuesta;
+	}
+	@RequestMapping(value = "/buscar-rolModulo", method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, Object> findByNombreRolModulo(@RequestParam String nombreRol) {
+		Map<String, Object> respuesta = new HashMap<String, Object>();
+		respuesta.put("success", true);
+		
+		try {
+			respuesta.put("data", 
+					this.rolServicio.findByNombreRol(nombreRol));
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			respuesta.put("msg", e.getMessage());
+			respuesta.put("data", RolHelper
+				     .convertListModelToListF2B(this.rolServicio
+				       .findAllRolesModulos(Roles.class)));
+			this.log.error("Error al buscar usuarios por nombre de usuario", e);
+		}
+		
+		return respuesta;
+	}
+	/**
+	 * 
+	 * @param cveUsuario
+	 * @return
+	 */
+	@RequestMapping(value = "/obtener-permisos-rol", method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, Object> getPermisoRol(@RequestParam String rol) {
+		Map<String, Object> respuesta = new HashMap<String, Object>();
+		
+		try {
+			respuesta.put("children", this.permisoRolServicio.getPermisosByRol(rol));
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			respuesta.put("msg", e.getMessage());
+			this.log.error("Error al obtener la lista de permisos del rol", e);
+		}
+		
+		return respuesta;
+	}
+	
+	/**
+	 * 
+	 * @param rol
+	 * @return
+	 */
+	@RequestMapping(value = "/obtener-todos-permisos", method = RequestMethod.GET)
+	@ResponseBody
+	public Map<String, Object> getAllPermisos(@RequestParam String rol) {
+		Map<String, Object> respuesta = new HashMap<String, Object>();
+		
+		try {
+			respuesta.put("children", this.permisoRolServicio.getAllPermisosByRol(rol));
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			respuesta.put("msg", e.getMessage());
+			this.log.error("Error al obtener la lista completa de permisos", e);
+		}
+		
+		return respuesta;
+	}
+	
+	@RequestMapping(value = "/eliminar-permisos", method = RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> deletePermisos(@RequestParam String rol, 
+			@RequestParam Long[] cveCatPeticion) {
+		Map<String, Object> respuesta = new HashMap<String, Object>();
+		respuesta.put("success", true);
+		
+		try {
+			this.permisoRolServicio.deletePermisos(rol, cveCatPeticion);
+		} catch (Exception e) {
+			respuesta.put("success", false);
+			respuesta.put("msg", e.getMessage());
+			this.log.error("Error al eliminar los permisos", e);
+		}
+		
+		return respuesta;
+	}
+	
+}

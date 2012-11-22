@@ -1,0 +1,206 @@
+/**
+ * @author José Luis Landero
+ */
+Ext.ClassManager.create('PR.controller.AsignarRol', {
+	extend: 'Ext.app.Controller',
+	models: ['Rol'],
+	stores: ['RolesAutocomplete', 'PermisosRolTree', 'PermisosTree'],
+	views: ['rolUsuario.BuscarRolForm', 'rolUsuario.RolUsuarioTree', 'rolUsuario.PermisoTree'],
+	requires: ['PR.util.Namespace'],
+	
+	widgets: [],
+	
+	loadingOverlay: null,
+	
+	init: function() {
+		this.control({
+			'formbuscarrol #nombreRol': {
+				select: this.onSelectNombreRol
+			},
+			'#permisos': {
+				checkchange: this.onCheckChange
+			},
+			'#eliminar-permisos-rol': {
+				click: this.eliminarPermisosRol
+			},
+			'#asignar-permisos-rol': {
+				click: this.agregarPermisos
+			}
+		});
+		
+		this.getStore('PermisosTree').addListener('load', this.onLoadPermisos, this);
+		
+		Ext.EventManager.onWindowResize(this.onWindowResizeListener, this);
+	},
+	
+	eliminarPermisosRol: function(btn) {
+		var permisos = btn.up().up().getChecked(),
+			rol = Ext.getCmp('nombreRol').getValue();
+		
+		if (rol == "" || rol == null || permisos.length <= 0) {
+			return;
+		}
+		
+		var clavesCatPeticion = new Array();
+		for (var i = 0, l = permisos.length; i < l; i++) {
+			clavesCatPeticion.push(permisos[i].data.id);
+		}
+		
+		Ext.Ajax.request({
+			timeout: 80000,
+			url: Namespace.namespace + 'roles/eliminar-permisos',
+			scope: this,
+			params: {
+				rol: rol,
+				cveCatPeticion: clavesCatPeticion
+			},
+			waitMsg: 'Asignando permisos...',
+			success: function(response) {
+				Ext.Msg.show({
+					title: 'Operación exitosa',
+					msg: 'Los permisos se han eliminado exitosamente',
+					icon: Ext.Msg.INFO,
+					buttons: Ext.Msg.OK
+				});
+				
+				if (response.responseText) {
+					this.getStore('PermisosRolTree').load({
+						params: {
+							rol: rol
+						}
+					});
+				} else {
+					Ext.MessageBox.alert('Error', 'Error al eliminar los permisos');
+				}
+			},
+			failure: function(form, action) {
+				if (!action || !action.result) {
+   					Ext.MessageBox.alert('Error', 'Error en la conexion');
+   					return;
+				}
+   				Ext.MessageBox.alert('Error', action.result.msg);
+			}
+		});
+	},
+	
+	agregarPermisos: function(btn) {
+		
+		Ext.getCmp( 'asignar-permisos-rol' ).setDisabled(true);
+		var permisos = btn.up().up().getChecked(),
+			rol = Ext.getCmp('nombreRol').getValue();
+		
+		if (rol == "" || rol == null || permisos.length <= 0) {
+			return;
+		}
+		
+		var clavesCatPeticion = new Array();
+		for (var i = 0, l = permisos.length; i < l; i++) {
+			
+			if (permisos[i].data.leaf==true)
+			{
+				clavesCatPeticion.push(permisos[i].data.id);
+			}
+			
+		}
+		
+		Ext.Ajax.request({
+			timeout: 80000,
+			scope: this,
+			url: Namespace.namespace + 'usuarios/permisosroles/agregar',
+			params: {
+				rol: rol,
+				cveCatPeticion: clavesCatPeticion
+			},
+			waitMsg: 'Asignando permisos...',
+			success: function(response) {
+				Ext.getCmp( 'asignar-permisos-rol' ).setDisabled(false);
+				this.loadingOverlay = new Ext.LoadMask(Ext.getBody(), {
+					msg:'Los permisos se han asignado exitosamente...'+'Actualizando listado...'
+				});
+				this.loadingOverlay.show();	
+//				Ext.Msg.show({
+//					title: 'Operación exitosa',
+//					msg: 'Los permisos se han asignado exitosamente',
+//					icon: Ext.Msg.INFO,
+//					buttons: Ext.Msg.OK
+//				});	
+				rol = Ext.getCmp('nombreRol').getValue();
+				if (response.responseText) {
+					this.getStore('PermisosTree').load({
+						params: {
+							rol: rol
+						}
+					});					
+					this.getStore('PermisosRolTree').load({
+						params: {
+							rol: rol
+						}
+					});
+				} else {
+					Ext.MessageBox.alert('Error', 'Error al asignar los permisos');
+				}
+			},
+			failure: function(form, action) {
+				if (!action || !action.result) {
+   					Ext.MessageBox.alert('Error', 'Error en la conexion');
+   					return;
+				}
+   				Ext.MessageBox.alert('Error', action.result.msg);
+			}
+		});
+	},
+	
+	onSelectNombreRol: function(combo, records, e) {
+		this.showLoadingOverlay();
+		
+		this.getStore('PermisosRolTree').load({
+			params: {
+				rol: records[0].get('rol')
+			}
+		});
+		
+		this.getStore('PermisosTree').load({
+			
+			params: {
+				rol: records[0].get('rol')
+			}
+		});
+	},
+	
+	onLoadPermisos: function() {
+		if (null != this.loadingOverlay) {
+			this.loadingOverlay.destroy();
+		}
+		
+		var permisosUsuarioTreeRoot = Ext.getCmp('permisos-usuario').getStore().getRootNode(),
+			permisosTreeRoot = Ext.getCmp('permisos').getStore().getRootNode(); 
+		
+		permisosUsuarioTreeRoot.collapse();
+		permisosUsuarioTreeRoot.expand();
+		permisosTreeRoot.collapse();
+		permisosTreeRoot.expand();
+	},
+	
+	onCheckChange: function(node, checked, e) {
+		node.cascadeBy(function() {
+			this.set('checked', checked);
+		});
+	},
+	
+	showLoadingOverlay: function() {
+		this.loadingOverlay = new Ext.LoadMask(Ext.getBody(), {
+			msg: 'Cargando permisos...'
+		});
+		this.loadingOverlay.show();
+	},
+
+	/**
+	 * Función que escucha al evento onWindowResize, es la encargada de aplicar
+	 * el redimensionado a los widgets contenidos en {widget}.
+	 */
+	onWindowResizeListener: function() {
+		for (var i = 0, l = this.widgets.length; i < l; i++) {
+			this.widgets[i].doComponentLayout();
+		}
+	}
+});
